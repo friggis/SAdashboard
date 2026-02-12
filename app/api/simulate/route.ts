@@ -109,11 +109,11 @@ async function simulateCompleteTask(agentId: string, incomeAmount?: number) {
   const currentData = await KVClient.getDashboardData();
   const agent = currentData?.agents.find(a => a.id === agentId);
 
-  let update = {
+  let update: import('@/lib/types').AgentUpdatePayload = {
     agentId,
     currentTask: {
       id: agent?.currentTask?.id || `task_${Date.now()}`,
-      status: 'completed' as const,
+      status: 'completed',
       progress: 100,
       endTime: new Date(),
     },
