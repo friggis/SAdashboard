@@ -107,7 +107,7 @@ async function simulateStartTask(agentId: string) {
 async function simulateCompleteTask(agentId: string, incomeAmount?: number) {
   // First complete the current task
   const currentData = await KVClient.getDashboardData();
-  const agent = currentData.agents.find(a => a.id === agentId);
+  const agent = currentData?.agents.find(a => a.id === agentId);
 
   let update = {
     agentId,
