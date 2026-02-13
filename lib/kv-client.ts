@@ -1,15 +1,18 @@
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
 import { Agent, ActivityLog, IncomeGoal, DashboardData, AgentUpdatePayload } from './types';
 
 const DASHBOARD_KEY = 'dashboard:data';
 const LOCK_KEY = 'dashboard:lock';
 const LOCK_TTL = 10; // seconds
 
+// Initialize Redis client from environment variables (UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN)
+const redis = Redis.fromEnv();
+
 export class KVClient {
   // Get complete dashboard data
   static async getDashboardData(): Promise<DashboardData | null> {
     try {
-      const data = await kv.get<DashboardData>(DASHBOARD_KEY);
+      const data = await redis.get<DashboardData>(DASHBOARD_KEY);
       if (!data) {
         return this.initializeDashboard();
       }
@@ -95,7 +98,7 @@ export class KVClient {
       timestamp: new Date(),
     };
 
-    await kv.set(DASHBOARD_KEY, initialData);
+    await redis.set(DASHBOARD_KEY, initialData);
     return initialData;
   }
 
@@ -103,8 +106,8 @@ export class KVClient {
   static async updateAgent(update: AgentUpdatePayload): Promise<DashboardData | null> {
     const lockKey = `${LOCK_KEY}:${update.agentId}`;
 
-    // Try to acquire lock (set if not exists with TTL)
-    const acquired = await kv.set(lockKey, 'locked', { nx: true, ex: LOCK_TTL });
+    // Try to acquire lock (SET NX with expiration)
+    const acquired = await redis.set(lockKey, 'locked', { nx: true, ex: LOCK_TTL });
     if (!acquired) {
       throw new Error('Could not acquire lock for agent update');
     }
@@ -186,11 +189,11 @@ export class KVClient {
         }
       }
 
-      await kv.set(DASHBOARD_KEY, currentData);
+      await redis.set(DASHBOARD_KEY, currentData);
 
       return currentData;
     } finally {
-      await kv.del(lockKey);
+      await redis.del(lockKey);
     }
   }
 
@@ -232,13 +235,13 @@ export class KVClient {
     };
     currentData.activityLogs.unshift(activityLog);
 
-    await kv.set(DASHBOARD_KEY, currentData);
+    await redis.set(DASHBOARD_KEY, currentData);
     return currentData;
   }
 
   // Clear all data (for testing)
   static async clearAll(): Promise<void> {
-    await kv.del(DASHBOARD_KEY);
+    await redis.del(DASHBOARD_KEY);
     await this.initializeDashboard();
   }
 }
