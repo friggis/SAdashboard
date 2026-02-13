@@ -103,8 +103,8 @@ export class KVClient {
   static async updateAgent(update: AgentUpdatePayload): Promise<DashboardData | null> {
     const lockKey = `${LOCK_KEY}:${update.agentId}`;
 
-    // Try to acquire lock
-    const acquired = await kv.setnx(lockKey, 'locked', LOCK_TTL);
+    // Try to acquire lock (set if not exists with TTL)
+    const acquired = await kv.set(lockKey, 'locked', { nx: true, ex: LOCK_TTL });
     if (!acquired) {
       throw new Error('Could not acquire lock for agent update');
     }

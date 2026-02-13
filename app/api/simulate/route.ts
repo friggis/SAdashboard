@@ -122,24 +122,24 @@ async function simulateCompleteTask(agentId: string, incomeAmount?: number) {
   // Add random insight based on agent type
   const insights = {
     'amazon-fba': [
-      { type: 'finding', content: 'Found 3 product opportunities with >30% profit margins in home & kitchen category', confidence: 85 },
-      { type: 'opportunity', content: 'Seasonal demand increasing for outdoor furniture - 40% YoY growth', confidence: 92 },
-      { type: 'risk', content: 'Electronics category showing increased competition - careful with pricing', confidence: 78 },
+      { type: 'finding' as const, content: 'Found 3 product opportunities with >30% profit margins in home & kitchen category', confidence: 85 },
+      { type: 'opportunity' as const, content: 'Seasonal demand increasing for outdoor furniture - 40% YoY growth', confidence: 92 },
+      { type: 'risk' as const, content: 'Electronics category showing increased competition - careful with pricing', confidence: 78 },
     ],
     'tennis-betting': [
-      { type: 'finding', content: 'Player Stats: Top seed has 78% win rate on clay courts this season', confidence: 88 },
-      { type: 'opportunity', content: 'Value bet detected: Underdog odds imply 35% win probability vs our model 45%', confidence: 91 },
-      { type: 'recommendation', content: 'Consider live betting on tie-breaks - statistically favorable in 3rd sets', confidence: 75 },
+      { type: 'finding' as const, content: 'Player Stats: Top seed has 78% win rate on clay courts this season', confidence: 88 },
+      { type: 'opportunity' as const, content: 'Value bet detected: Underdog odds imply 35% win probability vs our model 45%', confidence: 91 },
+      { type: 'recommendation' as const, content: 'Consider live betting on tie-breaks - statistically favorable in 3rd sets', confidence: 75 },
     ],
     'challenge-agents': [
-      { type: 'finding', content: 'Arbitrage opportunity: 2.3% guaranteed profit across three exchanges', confidence: 96 },
-      { type: 'opportunity', content: 'New signup bonus available: £50 free bet after £20 stake', confidence: 100 },
-      { type: 'recommendation', content: 'Diversify across 5 platforms to minimize risk of account restrictions', confidence: 82 },
+      { type: 'finding' as const, content: 'Arbitrage opportunity: 2.3% guaranteed profit across three exchanges', confidence: 96 },
+      { type: 'opportunity' as const, content: 'New signup bonus available: £50 free bet after £20 stake', confidence: 100 },
+      { type: 'recommendation' as const, content: 'Diversify across 5 platforms to minimize risk of account restrictions', confidence: 82 },
     ],
     'coordinator': [
-      { type: 'finding', content: 'Amazon FBA agent productivity increased 15% after schedule optimization', confidence: 89 },
-      { type: 'recommendation', content: 'Allocate more resources to tennis betting during major tournaments', confidence: 85 },
-      { type: 'risk', content: 'Challenge agent showing signs of burnout - reduce task load temporarily', confidence: 77 },
+      { type: 'finding' as const, content: 'Amazon FBA agent productivity increased 15% after schedule optimization', confidence: 89 },
+      { type: 'recommendation' as const, content: 'Allocate more resources to tennis betting during major tournaments', confidence: 85 },
+      { type: 'risk' as const, content: 'Challenge agent showing signs of burnout - reduce task load temporarily', confidence: 77 },
     ],
   };
 
