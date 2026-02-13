@@ -198,7 +198,7 @@ export class KVClient {
   static async updateIncome(
     agentId: string,
     amount: number,
-    breakdownKey?: keyof typeof currentData.incomeGoal.breakdown
+    breakdownKey?: keyof DashboardData['incomeGoal']['breakdown']
   ): Promise<DashboardData | null> {
     const currentData = await this.getDashboardData();
     if (!currentData) return null;
@@ -206,8 +206,10 @@ export class KVClient {
     const prevAmount = currentData.incomeGoal.currentAmount;
     currentData.incomeGoal.currentAmount += amount;
 
-    if (breakdownKey && currentData.incomeGoal.breakdown[breakdownKey] !== undefined) {
-      (currentData.incomeGoal.breakdown[breakdownKey] as number) += amount;
+    if (breakdownKey) {
+      // Initialize the breakdown key if it doesn't exist, or add to existing amount
+      const current = currentData.incomeGoal.breakdown[breakdownKey];
+      currentData.incomeGoal.breakdown[breakdownKey] = (current || 0) + amount;
     }
 
     // Add to historical
