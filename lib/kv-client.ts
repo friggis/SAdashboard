@@ -1,6 +1,8 @@
 import { kv } from '@vercel/kv';
 import { Agent, ActivityLog, IncomeGoal, DashboardData, AgentUpdatePayload } from './types';
 
+type BreakdownKey = keyof IncomeGoal['breakdown'];
+
 const DASHBOARD_KEY = 'dashboard:data';
 const LOCK_KEY = 'dashboard:lock';
 const LOCK_TTL = 10; // seconds
@@ -103,8 +105,8 @@ export class KVClient {
   static async updateAgent(update: AgentUpdatePayload): Promise<DashboardData | null> {
     const lockKey = `${LOCK_KEY}:${update.agentId}`;
 
-    // Try to acquire lock
-    const acquired = await kv.setnx(lockKey, 'locked', LOCK_TTL);
+    // Try to acquire lock using SET with NX (set if not exists) and EX (expiry in seconds)
+    const acquired = await kv.set(lockKey, 'locked', { nx: true, ex: LOCK_TTL });
     if (!acquired) {
       throw new Error('Could not acquire lock for agent update');
     }
@@ -198,7 +200,7 @@ export class KVClient {
   static async updateIncome(
     agentId: string,
     amount: number,
-    breakdownKey?: keyof typeof currentData.incomeGoal.breakdown
+    breakdownKey?: BreakdownKey
   ): Promise<DashboardData | null> {
     const currentData = await this.getDashboardData();
     if (!currentData) return null;

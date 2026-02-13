@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { KVClient } from '@/lib/kv-client';
+import type { AgentUpdatePayload, AgentInsight } from '@/lib/types';
 
 // Simulate agent updates for testing
 export async function POST(request: NextRequest) {
@@ -109,7 +110,7 @@ async function simulateCompleteTask(agentId: string, incomeAmount?: number) {
   const currentData = await KVClient.getDashboardData();
   const agent = currentData?.agents.find(a => a.id === agentId);
 
-  let update: import('@/lib/types').AgentUpdatePayload = {
+  let update: AgentUpdatePayload = {
     agentId,
     currentTask: {
       id: agent?.currentTask?.id || `task_${Date.now()}`,
@@ -120,7 +121,7 @@ async function simulateCompleteTask(agentId: string, incomeAmount?: number) {
   };
 
   // Add random insight based on agent type
-  const insights = {
+  const insights: Record<string, Array<{ type: 'finding' | 'opportunity' | 'risk' | 'recommendation'; content: string; confidence: number }>> = {
     'amazon-fba': [
       { type: 'finding', content: 'Found 3 product opportunities with >30% profit margins in home & kitchen category', confidence: 85 },
       { type: 'opportunity', content: 'Seasonal demand increasing for outdoor furniture - 40% YoY growth', confidence: 92 },
@@ -144,7 +145,7 @@ async function simulateCompleteTask(agentId: string, incomeAmount?: number) {
   };
 
   const agentInsights = insights[agentId as keyof typeof insights] || insights['coordinator'];
-  const randomInsight = agentInsights[Math.floor(Math.random() * agentInsights.length)];
+  const randomInsight = agentInsights[Math.floor(Math.random() * agentInsights.length)] as { type: 'finding' | 'opportunity' | 'risk' | 'recommendation'; content: string; confidence: number };
 
   update.newInsight = {
     ...randomInsight,
@@ -170,13 +171,15 @@ async function simulateCompleteTask(agentId: string, incomeAmount?: number) {
 }
 
 async function simulateAddInsight(agentId: string, insightData?: any) {
-  const update = {
+  const newInsight = insightData || {
+    type: 'finding' as const,
+    content: 'New discovery: Market trend shifting toward sustainable products',
+    confidence: 75,
+  } as Omit<AgentInsight, 'id' | 'timestamp'>;
+
+  const update: AgentUpdatePayload = {
     agentId,
-    newInsight: insightData || {
-      type: 'finding' as const,
-      content: 'New discovery: Market trend shifting toward sustainable products',
-      confidence: 75,
-    },
+    newInsight,
   };
 
   await KVClient.updateAgent(update);
@@ -184,7 +187,7 @@ async function simulateAddInsight(agentId: string, insightData?: any) {
 }
 
 async function simulateError(agentId: string, message?: string) {
-  const update = {
+  const update: AgentUpdatePayload = {
     agentId,
     status: 'error' as const,
     message: message || 'An error occurred during task execution',

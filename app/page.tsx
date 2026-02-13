@@ -7,6 +7,7 @@ import {
   IncomeGoal,
   DashboardData,
   AgentStatus,
+  AgentInsight,
 } from '@/lib/types';
 
 // Components
@@ -26,7 +27,7 @@ const StatusBadge: React.FC<{ status: AgentStatus }> = ({ status }) => {
   );
 };
 
-const InsightCard: React.FC<{ insight: any }> = ({ insight }) => {
+const InsightCard: React.FC<{ insight: AgentInsight }> = ({ insight }) => {
   const typeStyles = {
     finding: 'border-l-4 border-blue-500',
     opportunity: 'border-l-4 border-green-500',
