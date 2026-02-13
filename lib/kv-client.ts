@@ -1,22 +1,30 @@
-import { Redis } from '@upstash/redis';
+import { Redis } from 'ioredis';
 import { Agent, ActivityLog, IncomeGoal, DashboardData, AgentUpdatePayload } from './types';
 
 const DASHBOARD_KEY = 'dashboard:data';
 const LOCK_KEY = 'dashboard:lock';
 const LOCK_TTL = 10; // seconds
 
-// Initialize Redis client from environment variables (UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN)
-const redis = Redis.fromEnv();
+// Initialize Redis client from environment variable
+const redis = new Redis(process.env.REDIS_URL!, {
+  // Enable automatic disconnect on process exit
+  maxRetriesPerRequest: null,
+  lazyConnect: true,
+});
+
+// Serialization helpers
+const serialize = (value: unknown): string => JSON.stringify(value);
+const deserialize = <T>(value: string): T => JSON.parse(value);
 
 export class KVClient {
   // Get complete dashboard data
   static async getDashboardData(): Promise<DashboardData | null> {
     try {
-      const data = await redis.get<DashboardData>(DASHBOARD_KEY);
+      const data = await redis.get(DASHBOARD_KEY);
       if (!data) {
         return this.initializeDashboard();
       }
-      return data;
+      return deserialize<DashboardData>(data);
     } catch (error) {
       console.error('Error getting dashboard data:', error);
       return null;
@@ -98,103 +106,91 @@ export class KVClient {
       timestamp: new Date(),
     };
 
-    await redis.set(DASHBOARD_KEY, initialData);
+    await redis.set(DASHBOARD_KEY, serialize(initialData));
     return initialData;
   }
 
   // Update agent data (used by agents to report status)
   static async updateAgent(update: AgentUpdatePayload): Promise<DashboardData | null> {
-    const lockKey = `${LOCK_KEY}:${update.agentId}`;
+    const currentData = await this.getDashboardData();
+    if (!currentData) return null;
 
-    // Try to acquire lock (SET NX with expiration)
-    const acquired = await redis.set(lockKey, 'locked', { nx: true, ex: LOCK_TTL });
-    if (!acquired) {
-      throw new Error('Could not acquire lock for agent update');
+    const agentIndex = currentData.agents.findIndex(a => a.id === update.agentId);
+    if (agentIndex === -1) {
+      throw new Error(`Agent ${update.agentId} not found`);
     }
 
-    try {
-      const currentData = await this.getDashboardData();
-      if (!currentData) return null;
+    const agent = { ...currentData.agents[agentIndex] };
+    let activityLog: ActivityLog | null = null;
 
-      const agentIndex = currentData.agents.findIndex(a => a.id === update.agentId);
-      if (agentIndex === -1) {
-        throw new Error(`Agent ${update.agentId} not found`);
-      }
-
-      const agent = { ...currentData.agents[agentIndex] };
-      let activityLog: ActivityLog | null = null;
-
-      // Update agent fields
-      if (update.status !== undefined) {
-        agent.status = update.status;
-      }
-
-      if (update.currentTask) {
-        if (update.currentTask.id) {
-          // Update existing task or add new one
-          const taskIndex = agent.taskQueue.findIndex(t => t.id === update.currentTask!.id);
-          if (taskIndex >= 0) {
-            agent.taskQueue[taskIndex] = { ...agent.taskQueue[taskIndex], ...update.currentTask };
-          } else {
-            agent.taskQueue.push(update.currentTask as Agent['taskQueue'][number]);
-          }
-        }
-        agent.currentTask = update.currentTask as Partial<Agent['currentTask']> as Agent['currentTask'];
-      }
-
-      if (update.metrics) {
-        agent.metrics = { ...agent.metrics, ...update.metrics };
-      }
-
-      if (update.newInsight) {
-        const insight = {
-          ...update.newInsight,
-          id: `insight_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          timestamp: new Date(),
-        } as Agent['recentInsights'][number];
-        agent.recentInsights.unshift(insight);
-        if (agent.recentInsights.length > 20) {
-          agent.recentInsights = agent.recentInsights.slice(0, 20);
-        }
-      }
-
-      if (update.message) {
-        activityLog = {
-          id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          timestamp: new Date(),
-          agentId: update.agentId,
-          agentName: agent.name,
-          type: 'info',
-          message: update.message,
-        };
-      }
-
-      agent.lastUpdate = new Date();
-
-      // Update dashboard data
-      currentData.agents[agentIndex] = agent;
-      currentData.timestamp = new Date();
-      currentData.systemMetrics.totalInsights = currentData.agents.reduce(
-        (sum, a) => sum + a.recentInsights.length,
-        0
-      );
-      currentData.systemMetrics.runningAgents = currentData.agents.filter(
-        a => a.status === 'running'
-      ).length;
-
-      if (activityLog) {
-        currentData.activityLogs.unshift(activityLog);
-        if (currentData.activityLogs.length > 100) {
-          currentData.activityLogs = currentData.activityLogs.slice(0, 100);
-        }
-      }
-
-      await redis.set(DASHBOARD_KEY, currentData);
-
-      return currentData;
-    } finally {
-      await redis.del(lockKey);
+    // Update agent fields
+    if (update.status !== undefined) {
+      agent.status = update.status;
     }
+
+    if (update.currentTask) {
+      if (update.currentTask.id) {
+        // Update existing task or add new one
+        const taskIndex = agent.taskQueue.findIndex(t => t.id === update.currentTask!.id);
+        if (taskIndex >= 0) {
+          agent.taskQueue[taskIndex] = { ...agent.taskQueue[taskIndex], ...update.currentTask };
+        } else {
+          agent.taskQueue.push(update.currentTask as Agent['taskQueue'][number]);
+        }
+      }
+      agent.currentTask = update.currentTask as Partial<Agent['currentTask']> as Agent['currentTask'];
+    }
+
+    if (update.metrics) {
+      agent.metrics = { ...agent.metrics, ...update.metrics };
+    }
+
+    if (update.newInsight) {
+      const insight = {
+        ...update.newInsight,
+        id: `insight_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: new Date(),
+      } as Agent['recentInsights'][number];
+      agent.recentInsights.unshift(insight);
+      if (agent.recentInsights.length > 20) {
+        agent.recentInsights = agent.recentInsights.slice(0, 20);
+      }
+    }
+
+    if (update.message) {
+      activityLog = {
+        id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: new Date(),
+        agentId: update.agentId,
+        agentName: agent.name,
+        type: 'info',
+        message: update.message,
+      };
+    }
+
+    agent.lastUpdate = new Date();
+
+    // Update dashboard data
+    currentData.agents[agentIndex] = agent;
+    currentData.timestamp = new Date();
+    currentData.systemMetrics.totalInsights = currentData.agents.reduce(
+      (sum, a) => sum + a.recentInsights.length,
+      0
+    );
+    currentData.systemMetrics.runningAgents = currentData.agents.filter(
+      a => a.status === 'running'
+    ).length;
+
+    if (activityLog) {
+      currentData.activityLogs.unshift(activityLog);
+      if (currentData.activityLogs.length > 100) {
+        currentData.activityLogs = currentData.activityLogs.slice(0, 100);
+      }
+    }
+
+    await redis.set(DASHBOARD_KEY, serialize(currentData));
+
+    return currentData;
   }
 
   // Update income goal (when agents complete earnings)
@@ -235,7 +231,7 @@ export class KVClient {
     };
     currentData.activityLogs.unshift(activityLog);
 
-    await redis.set(DASHBOARD_KEY, currentData);
+    await redis.set(DASHBOARD_KEY, serialize(currentData));
     return currentData;
   }
 
