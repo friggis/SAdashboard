@@ -180,6 +180,19 @@ export class KVClient {
         lastUpdate: new Date(),
         assignedGoals: [],
       },
+      // PAID Specialist: Gemini 3 Pro for complex tasks
+      {
+        id: 'paided-gemini-expert',
+        name: 'Gemini Expert',
+        type: 'other',
+        status: 'idle',
+        description: 'Specialist for complex multi-step system configuration, integration, and architectural tasks using Gemini 3 Pro',
+        taskQueue: [],
+        recentInsights: [],
+        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
+        lastUpdate: new Date(),
+        assignedGoals: [],
+      },
     ];
 
     const initialData: DashboardData = {
