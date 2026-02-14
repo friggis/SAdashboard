@@ -395,15 +395,25 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Research Agent Dashboard
-          </h1>
-          <p className="text-gray-600">
-            Real-time monitoring of all research activities and income generation
-          </p>
-          <div className="mt-2 text-sm text-gray-500">
-            Last updated: {new Date(data.timestamp).toLocaleString()}
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+              Research Agent Dashboard
+            </h1>
+            <p className="text-gray-600">
+              Real-time monitoring of all research activities and income generation
+            </p>
+            <div className="mt-2 text-sm text-gray-500">
+              Last updated: {new Date(data.timestamp).toLocaleString()}
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Link
+              href="/reports"
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium"
+            >
+              📄 View Reports
+            </Link>
           </div>
         </div>
 
