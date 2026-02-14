@@ -17,6 +17,171 @@ const serialize = (value: unknown): string => JSON.stringify(value);
 const deserialize = <T>(value: string): T => JSON.parse(value);
 
 export class KVClient {
+  // Default agents list (kept in sync with initializeDashboard)
+  private static getDefaultAgents(): Agent[] {
+    return [
+      {
+        id: 'amazon-fba',
+        name: 'Amazon FBA Research',
+        type: 'amazon_fba',
+        status: 'idle',
+        description: 'Researches profitable Amazon FBA products and market opportunities',
+        taskQueue: [],
+        recentInsights: [],
+        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
+        lastUpdate: new Date(),
+        assignedGoals: ['Identify 10 profitable product niches', 'Analyze market trends'],
+      },
+      {
+        id: 'tennis-betting',
+        name: 'Tennis Betting Research',
+        type: 'tennis_betting',
+        status: 'idle',
+        description: 'Analyzes tennis matches for betting opportunities',
+        taskQueue: [],
+        recentInsights: [],
+        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
+        lastUpdate: new Date(),
+        assignedGoals: ['Find value bets', 'Track player statistics'],
+      },
+      {
+        id: 'challenge-agents',
+        name: 'Challenge Agents',
+        type: 'challenge',
+        status: 'idle',
+        description: 'Runs various challenge and arbitrage opportunities',
+        taskQueue: [],
+        recentInsights: [],
+        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
+        lastUpdate: new Date(),
+        assignedGoals: ['Complete weekly challenges', 'Maximize arbitrage returns'],
+      },
+      {
+        id: 'coordinator',
+        name: 'Coordinator',
+        type: 'coordinator',
+        status: 'idle',
+        description: 'Manages and coordinates all research agents',
+        taskQueue: [],
+        recentInsights: [],
+        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
+        lastUpdate: new Date(),
+        assignedGoals: ['Synchronize agent activities', 'Optimize resource allocation'],
+      },
+      // Income Generation System Agents
+      {
+        id: 'income-researcher',
+        name: 'Income Researcher',
+        type: 'other',
+        status: 'idle',
+        description: 'Systematic research of all viable income streams for £5k/month tax-efficient target',
+        taskQueue: [],
+        recentInsights: [],
+        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
+        lastUpdate: new Date(),
+        assignedGoals: ['Survey all income opportunities', 'Rank by ROI and feasibility', 'Provide revenue estimates and timelines'],
+      },
+      {
+        id: 'digital-product-strategist',
+        name: 'Digital Product Strategist',
+        type: 'other',
+        status: 'idle',
+        description: 'Deep dive into Skool + PDF farming with 90-day launch plan',
+        taskQueue: [],
+        recentInsights: [],
+        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
+        lastUpdate: new Date(),
+        assignedGoals: ['Design Skool monetization models', 'Create PDF lead magnet strategy', 'Build 90-day implementation timeline'],
+      },
+      {
+        id: 'website-monetization-expert',
+        name: 'Website Monetization Expert',
+        type: 'other',
+        status: 'idle',
+        description: 'Audit & optimize existing websites for revenue growth',
+        taskQueue: [],
+        recentInsights: [],
+        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
+        lastUpdate: new Date(),
+        assignedGoals: ['Analyze current site revenue', 'Identify optimization opportunities', 'Create 30-60-90 day improvement plan'],
+      },
+      {
+        id: 'qa-reviewer',
+        name: 'QA Reviewer',
+        type: 'other',
+        status: 'idle',
+        description: 'Quality gate for all agent outputs - ensures completeness, accuracy, and actionability',
+        taskQueue: [],
+        recentInsights: [],
+        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
+        lastUpdate: new Date(),
+        assignedGoals: ['Review research reports for gaps', 'Validate revenue calculations', 'Ensure tax compliance', 'Send back revisions until quality standards met'],
+      },
+      {
+        id: 'integration-compiler',
+        name: 'Integration Compiler',
+        type: 'other',
+        status: 'idle',
+        description: 'Synthesizes all agent outputs into a master income strategy',
+        taskQueue: [],
+        recentInsights: [],
+        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
+        lastUpdate: new Date(),
+        assignedGoals: ['Combine all research into coherent plan', 'Prioritize by ROI/time', 'Create 3/6/12 month milestones', 'Produce final Path to £5k/mo document'],
+      },
+      // Additional parallel researcher slots
+      {
+        id: 'income-researcher-1',
+        name: 'Income Researcher 1',
+        type: 'other',
+        status: 'idle',
+        description: 'Parallel income research worker',
+        taskQueue: [],
+        recentInsights: [],
+        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
+        lastUpdate: new Date(),
+        assignedGoals: [],
+      },
+      {
+        id: 'income-researcher-2',
+        name: 'Income Researcher 2',
+        type: 'other',
+        status: 'idle',
+        description: 'Parallel income research worker',
+        taskQueue: [],
+        recentInsights: [],
+        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
+        lastUpdate: new Date(),
+        assignedGoals: [],
+      },
+      {
+        id: 'income-researcher-3',
+        name: 'Income Researcher 3',
+        type: 'other',
+        status: 'idle',
+        description: 'Parallel income research worker',
+        taskQueue: [],
+        recentInsights: [],
+        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
+        lastUpdate: new Date(),
+        assignedGoals: [],
+      },
+      // PAID Specialist: Gemini 3 Pro for complex tasks
+      {
+        id: 'paided-gemini-expert',
+        name: 'Gemini Expert',
+        type: 'other',
+        status: 'idle',
+        description: 'Specialist for complex multi-step system configuration, integration, and architectural tasks using Gemini 3 Pro',
+        taskQueue: [],
+        recentInsights: [],
+        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
+        lastUpdate: new Date(),
+        assignedGoals: [],
+      },
+    ];
+  }
+
   // Get complete dashboard data
   static async getDashboardData(): Promise<DashboardData | null> {
     try {
@@ -24,7 +189,23 @@ export class KVClient {
       if (!data) {
         return this.initializeDashboard();
       }
-      return deserialize<DashboardData>(data);
+      const dashboard = deserialize<DashboardData>(data);
+
+      // Merge any missing default agents (supports zero-downtime agent additions)
+      const defaultAgents = this.getDefaultAgents();
+      const existingIds = new Set(dashboard.agents.map(a => a.id));
+      const missingAgents = defaultAgents.filter(a => !existingIds.has(a.id));
+
+      if (missingAgents.length > 0) {
+        console.log(`[KVClient] Merging ${missingAgents.length} missing agent(s) into dashboard: ${missingAgents.map(a => a.id).join(', ')}`);
+        dashboard.agents.push(...missingAgents);
+        dashboard.systemMetrics.totalAgents = dashboard.agents.length;
+        dashboard.timestamp = new Date();
+        // Persist the merged state
+        await redis.set(DASHBOARD_KEY, serialize(dashboard));
+      }
+
+      return dashboard;
     } catch (error) {
       console.error('Error getting dashboard data:', error);
       return null;
@@ -33,7 +214,7 @@ export class KVClient {
 
   // Initialize dashboard with default data
   private static async initializeDashboard(): Promise<DashboardData> {
-    const defaultAgents: Agent[] = [
+    const defaultAgents = this.getDefaultAgents();
       {
         id: 'amazon-fba',
         name: 'Amazon FBA Research',
