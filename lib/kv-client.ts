@@ -271,6 +271,7 @@ export class KVClient {
     // Update dashboard data
     currentData.agents[agentIndex] = agent;
     currentData.timestamp = new Date();
+    currentData.systemMetrics.lastUpdate = new Date();
     currentData.systemMetrics.totalInsights = currentData.agents.reduce(
       (sum, a) => sum + a.recentInsights.length,
       0
