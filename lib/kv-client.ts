@@ -143,6 +143,43 @@ export class KVClient {
         lastUpdate: new Date(),
         assignedGoals: ['Combine all research into coherent plan', 'Prioritize by ROI/time', 'Create 3/6/12 month milestones', 'Produce final Path to £5k/mo document'],
       },
+      // Additional parallel researcher slots
+      {
+        id: 'income-researcher-1',
+        name: 'Income Researcher 1',
+        type: 'other',
+        status: 'idle',
+        description: 'Parallel income research worker',
+        taskQueue: [],
+        recentInsights: [],
+        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
+        lastUpdate: new Date(),
+        assignedGoals: [],
+      },
+      {
+        id: 'income-researcher-2',
+        name: 'Income Researcher 2',
+        type: 'other',
+        status: 'idle',
+        description: 'Parallel income research worker',
+        taskQueue: [],
+        recentInsights: [],
+        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
+        lastUpdate: new Date(),
+        assignedGoals: [],
+      },
+      {
+        id: 'income-researcher-3',
+        name: 'Income Researcher 3',
+        type: 'other',
+        status: 'idle',
+        description: 'Parallel income research worker',
+        taskQueue: [],
+        recentInsights: [],
+        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
+        lastUpdate: new Date(),
+        assignedGoals: [],
+      },
     ];
 
     const initialData: DashboardData = {
