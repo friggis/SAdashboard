@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
@@ -12,7 +12,7 @@ interface Report {
   path: string;
 }
 
-export default function ReportsPage() {
+function ReportsContent() {
   const searchParams = useSearchParams();
   const agentFilter = searchParams.get('agent');
 
@@ -165,5 +165,13 @@ export default function ReportsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ReportsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-100"><p className="text-xl">Loading...</p></div>}>
+      <ReportsContent />
+    </Suspense>
   );
 }
