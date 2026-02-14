@@ -160,6 +160,14 @@ const AgentCard: React.FC<{ agent: Agent }> = ({ agent }) => {
       <div className="mt-3 text-xs text-gray-400 text-right">
         Last update: {new Date(agent.lastUpdate).toLocaleTimeString()}
       </div>
+      <div className="mt-3 text-right border-t pt-3">
+        <Link
+          href={`/reports?agent=${encodeURIComponent(agent.id)}`}
+          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+        >
+          📄 View Report →
+        </Link>
+      </div>
     </div>
   );
 };

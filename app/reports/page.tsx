@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 interface Report {
   agentId: string;
@@ -12,6 +13,9 @@ interface Report {
 }
 
 export default function ReportsPage() {
+  const searchParams = useSearchParams();
+  const agentFilter = searchParams.get('agent');
+
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
@@ -24,14 +28,22 @@ export default function ReportsPage() {
       .then(data => {
         setReports(data);
         setLoading(false);
+        // Auto-select first report for filtered agent
+        if (agentFilter && data.length > 0) {
+          const agentReports = data.filter((r: Report) => r.agentId === agentFilter);
+          if (agentReports.length > 0) {
+            setSelectedReport(agentReports[0]);
+            loadReportContent(agentReports[0]);
+          }
+        }
       })
       .catch(err => {
         setError('Failed to load reports');
         setLoading(false);
       });
-  }, []);
+  }, [agentFilter]);
 
-  const loadReport = async (report: Report) => {
+  const loadReportContent = async (report: Report) => {
     setSelectedReport(report);
     setLoading(true);
     setError(null);
@@ -51,17 +63,43 @@ export default function ReportsPage() {
     }
   };
 
+  const loadReport = (report: Report) => {
+    loadReportContent(report);
+  };
+
+  // Filter reports if agentFilter is set
+  const displayedReports = agentFilter
+    ? reports.filter(r => r.agentId === agentFilter)
+    : reports;
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6 flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Research Reports</h1>
-            <p className="text-gray-600">All completed agent research and findings</p>
+            <p className="text-gray-600">
+              {agentFilter
+                ? `${displayedReports.length} report(s) for ${displayedReports[0]?.agentName || 'this agent'}`
+                : 'All completed agent research and findings'}
+            </p>
           </div>
-          <Link href="/" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-            ← Back to Dashboard
-          </Link>
+          <div className="flex gap-3">
+            {agentFilter && (
+              <Link
+                href="/reports"
+                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+              >
+                ← Show All Agents
+              </Link>
+            )}
+            <Link
+              href="/"
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              ← Back to Dashboard
+            </Link>
+          </div>
         </div>
 
         {loading && <p className="text-gray-600">Loading reports...</p>}
@@ -71,9 +109,11 @@ export default function ReportsPage() {
           {/* Reports List */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow p-4">
-              <h2 className="font-bold text-lg mb-4">Available Reports ({reports.length})</h2>
+              <h2 className="font-bold text-lg mb-4">
+                Available Reports ({displayedReports.length})
+              </h2>
               <div className="space-y-2 max-h-[70vh] overflow-y-auto">
-                {reports.map(report => (
+                {displayedReports.map(report => (
                   <div
                     key={`${report.agentId}/${report.filename}`}
                     className={`p-3 rounded cursor-pointer border ${
