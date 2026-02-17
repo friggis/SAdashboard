@@ -426,6 +426,22 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Mock Mode Warning */}
+        {data.systemInfo?.mockMode && (
+          <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded shadow">
+            <div className="flex items-center">
+              <span className="text-yellow-600 text-2xl mr-3">⚠️</span>
+              <div>
+                <h3 className="font-bold text-yellow-800">Mock Mode Active</h3>
+                <p className="text-sm text-yellow-700">
+                  Dashboard is using in-memory storage. Real-time updates will NOT persist across server restarts.
+                  For production, set the <code className="bg-yellow-100 px-1 rounded">REDIS_URL</code> environment variable.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Income Goal */}
         <div className="mb-8">
           <IncomeGoalCard goal={data.incomeGoal} />

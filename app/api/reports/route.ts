@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readFile, readdir } from 'fs/promises';
 import { join } from 'path';
 
-// Base directory for reports within the app (public/reports)
-const REPORTS_BASE = join(process.cwd(), 'public', 'reports');
+// Base directory for reports - read from memory/agents (where agents actually write)
+// Path: workspace/memory/agents -> from app dir: ../memory/agents
+const REPORTS_BASE = join(process.cwd(), '..', 'memory', 'agents');
 
 // Helper to recursively scan reports directory
 async function listReports(dir: string, agentPrefix = ''): Promise<any[]> {

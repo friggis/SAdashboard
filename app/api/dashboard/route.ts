@@ -11,7 +11,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(data, {
+    // Add system info flag (mock mode detection)
+    const response = {
+      ...data,
+      systemInfo: {
+        mockMode: !process.env.REDIS_URL,
+        timestamp: new Date().toISOString(),
+      },
+    };
+
+    return NextResponse.json(response, {
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Content-Type': 'application/json',

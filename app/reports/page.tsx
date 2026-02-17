@@ -3,6 +3,8 @@
 import React, { useEffect, useState, Suspense, useMemo } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface Report {
   agentId: string;
@@ -22,6 +24,7 @@ function ReportsContent() {
   const [content, setContent] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [readReports, setReadReports] = useState<Set<string>>(new Set());
+  const [copied, setCopied] = useState(false);
 
   // Load read status from localStorage on mount
   useEffect(() => {
@@ -91,6 +94,16 @@ function ReportsContent() {
     loadReportContent(report);
   };
 
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
   // Group reports by agent
   const reportsByAgent = useMemo(() => {
     const groups: Record<string, { agentName: string; reports: Report[] }> = {};
@@ -116,38 +129,79 @@ function ReportsContent() {
     return reports.filter(r => !readReports.has(`${r.agentId}/${r.filename}`)).length;
   }, [reports, readReports]);
 
+  // Get unique agents from reports
+  const agentsList = useMemo(() => {
+    const map = new Map<string, string>();
+    reports.forEach(r => {
+      if (!map.has(r.agentId)) {
+        map.set(r.agentId, r.agentName);
+      }
+    });
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [reports]);
+
   // Filter reports if agentFilter is set
   const displayedReports = agentFilter
     ? reports.filter(r => r.agentId === agentFilter)
     : reports;
 
+  const handleAgentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    if (value) {
+      window.location.href = `/reports?agent=${encodeURIComponent(value)}`;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-6 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Research Reports</h1>
-            <p className="text-gray-600">
-              {agentFilter
-                ? `${displayedReports.length} report(s) for ${displayedReports[0]?.agentName || 'this agent'}`
-                : `All completed agent research (${reports.length} total${totalUnread > 0 ? `, ${totalUnread} new` : ''})`}
-            </p>
-          </div>
-          <div className="flex gap-3">
-            {agentFilter && (
+        <div className="mb-6">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Research Reports</h1>
+              <p className="text-gray-600 mt-1">
+                {agentFilter
+                  ? `${displayedReports.length} report(s) for ${displayedReports[0]?.agentName || 'this agent'}`
+                  : `All completed agent research (${reports.length} total${totalUnread > 0 ? `, ${totalUnread} new` : ''})`}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3 items-center">
+              {/* Jump to Agent dropdown */}
+              <div className="flex items-center gap-2">
+                <label htmlFor="agent-select" className="text-sm font-medium text-gray-700">
+                  Jump to Agent:
+                </label>
+                <select
+                  id="agent-select"
+                  value={agentFilter || ''}
+                  onChange={handleAgentChange}
+                  className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  <option value="">All Agents</option>
+                  {agentsList
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map(agent => (
+                      <option key={agent.id} value={agent.id}>
+                        {agent.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
+              {agentFilter && (
+                <Link
+                  href="/reports"
+                  className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                >
+                  ← Show All Agents
+                </Link>
+              )}
               <Link
-                href="/reports"
-                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                href="/"
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
-                ← Show All Agents
+                ← Back to Dashboard
               </Link>
-            )}
-            <Link
-              href="/"
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              ← Back to Dashboard
-            </Link>
+            </div>
           </div>
         </div>
 
@@ -266,10 +320,21 @@ function ReportsContent() {
                   {loading ? (
                     <p className="text-gray-600">Loading content...</p>
                   ) : (
-                    <div className="prose max-w-none">
-                      <pre className="whitespace-pre-wrap font-mono text-sm text-gray-800 bg-gray-50 p-4 rounded border overflow-x-auto">
-                        {content}
-                      </pre>
+                    <div>
+                      <div className="flex justify-end mb-2">
+                        <button
+                          onClick={copyToClipboard}
+                          className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm font-medium text-gray-700 transition-colors"
+                          title="Copy report content to clipboard"
+                        >
+                          {copied ? '✓ Copied!' : '📋 Copy'}
+                        </button>
+                      </div>
+                      <div className="prose max-w-none prose-sm sm:prose-base lg:prose-lg">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {content}
+                        </ReactMarkdown>
+                      </div>
                     </div>
                   )}
                 </div>

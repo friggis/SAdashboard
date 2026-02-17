@@ -5,9 +5,14 @@ const DASHBOARD_KEY = 'dashboard:data';
 const LOCK_KEY = 'dashboard:lock';
 const LOCK_TTL = 10; // seconds
 
-// Initialize Redis client from environment variable
-const redis = new Redis(process.env.REDIS_URL!, {
-  // Enable automatic disconnect on process exit
+// Check if we should use in-memory mock (for local development without Redis)
+const USE_MOCK = !process.env.REDIS_URL;
+
+// In-memory store for mock mode
+let mockData: DashboardData | null = null;
+
+// Initialize Redis client from environment variable (only if not in mock mode)
+const redis = USE_MOCK ? null : new Redis(process.env.REDIS_URL!, {
   maxRetriesPerRequest: null,
   lazyConnect: true,
 });
@@ -20,6 +25,18 @@ export class KVClient {
   // Default agents list (kept in sync with initializeDashboard)
   private static getDefaultAgents(): Agent[] {
     return [
+      {
+        id: 'dashboard-maintainer',
+        name: 'Dashboard Maintainer',
+        type: 'maintainer',
+        status: 'idle',
+        description: 'Monitors SAdashboard health and uptime, ensures continuous operation, and reports status',
+        taskQueue: [],
+        recentInsights: [],
+        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
+        lastUpdate: new Date(),
+        assignedGoals: ['Monitor dashboard uptime', 'Run health checks every 30 minutes', 'Report status to dashboard'],
+      },
       {
         id: 'amazon-fba',
         name: 'Amazon FBA Research',
@@ -185,7 +202,16 @@ export class KVClient {
   // Get complete dashboard data
   static async getDashboardData(): Promise<DashboardData | null> {
     try {
-      const data = await redis.get(DASHBOARD_KEY);
+      // Mock mode: use in-memory data
+      if (USE_MOCK) {
+        if (!mockData) {
+          mockData = await this.initializeDashboard();
+        }
+        return mockData;
+      }
+
+      // Redis mode
+      const data = await redis!.get(DASHBOARD_KEY);
       if (!data) {
         return this.initializeDashboard();
       }
@@ -202,7 +228,7 @@ export class KVClient {
         dashboard.systemMetrics.totalAgents = dashboard.agents.length;
         dashboard.timestamp = new Date();
         // Persist the merged state
-        await redis.set(DASHBOARD_KEY, serialize(dashboard));
+        await redis!.set(DASHBOARD_KEY, serialize(dashboard));
       }
 
       return dashboard;
@@ -215,166 +241,6 @@ export class KVClient {
   // Initialize dashboard with default data
   private static async initializeDashboard(): Promise<DashboardData> {
     const defaultAgents = this.getDefaultAgents();
-      {
-        id: 'amazon-fba',
-        name: 'Amazon FBA Research',
-        type: 'amazon_fba',
-        status: 'idle',
-        description: 'Researches profitable Amazon FBA products and market opportunities',
-        taskQueue: [],
-        recentInsights: [],
-        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
-        lastUpdate: new Date(),
-        assignedGoals: ['Identify 10 profitable product niches', 'Analyze market trends'],
-      },
-      {
-        id: 'tennis-betting',
-        name: 'Tennis Betting Research',
-        type: 'tennis_betting',
-        status: 'idle',
-        description: 'Analyzes tennis matches for betting opportunities',
-        taskQueue: [],
-        recentInsights: [],
-        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
-        lastUpdate: new Date(),
-        assignedGoals: ['Find value bets', 'Track player statistics'],
-      },
-      {
-        id: 'challenge-agents',
-        name: 'Challenge Agents',
-        type: 'challenge',
-        status: 'idle',
-        description: 'Runs various challenge and arbitrage opportunities',
-        taskQueue: [],
-        recentInsights: [],
-        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
-        lastUpdate: new Date(),
-        assignedGoals: ['Complete weekly challenges', 'Maximize arbitrage returns'],
-      },
-      {
-        id: 'coordinator',
-        name: 'Coordinator',
-        type: 'coordinator',
-        status: 'idle',
-        description: 'Manages and coordinates all research agents',
-        taskQueue: [],
-        recentInsights: [],
-        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
-        lastUpdate: new Date(),
-        assignedGoals: ['Synchronize agent activities', 'Optimize resource allocation'],
-      },
-      // Income Generation System Agents
-      {
-        id: 'income-researcher',
-        name: 'Income Researcher',
-        type: 'other',
-        status: 'idle',
-        description: 'Systematic research of all viable income streams for £5k/month tax-efficient target',
-        taskQueue: [],
-        recentInsights: [],
-        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
-        lastUpdate: new Date(),
-        assignedGoals: ['Survey all income opportunities', 'Rank by ROI and feasibility', 'Provide revenue estimates and timelines'],
-      },
-      {
-        id: 'digital-product-strategist',
-        name: 'Digital Product Strategist',
-        type: 'other',
-        status: 'idle',
-        description: 'Deep dive into Skool + PDF farming with 90-day launch plan',
-        taskQueue: [],
-        recentInsights: [],
-        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
-        lastUpdate: new Date(),
-        assignedGoals: ['Design Skool monetization models', 'Create PDF lead magnet strategy', 'Build 90-day implementation timeline'],
-      },
-      {
-        id: 'website-monetization-expert',
-        name: 'Website Monetization Expert',
-        type: 'other',
-        status: 'idle',
-        description: 'Audit & optimize existing websites for revenue growth',
-        taskQueue: [],
-        recentInsights: [],
-        metrics: {cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0},
-        lastUpdate: new Date(),
-        assignedGoals: ['Analyze current site revenue', 'Identify optimization opportunities', 'Create 30-60-90 day improvement plan'],
-      },
-      {
-        id: 'qa-reviewer',
-        name: 'QA Reviewer',
-        type: 'other',
-        status: 'idle',
-        description: 'Quality gate for all agent outputs - ensures completeness, accuracy, and actionability',
-        taskQueue: [],
-        recentInsights: [],
-        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
-        lastUpdate: new Date(),
-        assignedGoals: ['Review research reports for gaps', 'Validate revenue calculations', 'Ensure tax compliance', 'Send back revisions until quality standards met'],
-      },
-      {
-        id: 'integration-compiler',
-        name: 'Integration Compiler',
-        type: 'other',
-        status: 'idle',
-        description: 'Synthesizes all agent outputs into a master income strategy',
-        taskQueue: [],
-        recentInsights: [],
-        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
-        lastUpdate: new Date(),
-        assignedGoals: ['Combine all research into coherent plan', 'Prioritize by ROI/time', 'Create 3/6/12 month milestones', 'Produce final Path to £5k/mo document'],
-      },
-      // Additional parallel researcher slots
-      {
-        id: 'income-researcher-1',
-        name: 'Income Researcher 1',
-        type: 'other',
-        status: 'idle',
-        description: 'Parallel income research worker',
-        taskQueue: [],
-        recentInsights: [],
-        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
-        lastUpdate: new Date(),
-        assignedGoals: [],
-      },
-      {
-        id: 'income-researcher-2',
-        name: 'Income Researcher 2',
-        type: 'other',
-        status: 'idle',
-        description: 'Parallel income research worker',
-        taskQueue: [],
-        recentInsights: [],
-        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
-        lastUpdate: new Date(),
-        assignedGoals: [],
-      },
-      {
-        id: 'income-researcher-3',
-        name: 'Income Researcher 3',
-        type: 'other',
-        status: 'idle',
-        description: 'Parallel income research worker',
-        taskQueue: [],
-        recentInsights: [],
-        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
-        lastUpdate: new Date(),
-        assignedGoals: [],
-      },
-      // PAID Specialist: Gemini 3 Pro for complex tasks
-      {
-        id: 'paided-gemini-expert',
-        name: 'Gemini Expert',
-        type: 'other',
-        status: 'idle',
-        description: 'Specialist for complex multi-step system configuration, integration, and architectural tasks using Gemini 3 Pro',
-        taskQueue: [],
-        recentInsights: [],
-        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
-        lastUpdate: new Date(),
-        assignedGoals: [],
-      },
-    ];
 
     const initialData: DashboardData = {
       agents: defaultAgents,
@@ -398,7 +264,11 @@ export class KVClient {
       timestamp: new Date(),
     };
 
-    await redis.set(DASHBOARD_KEY, serialize(initialData));
+    if (USE_MOCK) {
+      mockData = initialData;
+    } else {
+      await redis!.set(DASHBOARD_KEY, serialize(initialData));
+    }
     return initialData;
   }
 
@@ -481,7 +351,11 @@ export class KVClient {
       }
     }
 
-    await redis.set(DASHBOARD_KEY, serialize(currentData));
+    if (USE_MOCK) {
+      mockData = currentData;
+    } else {
+      await redis!.set(DASHBOARD_KEY, serialize(currentData));
+    }
 
     return currentData;
   }
@@ -498,10 +372,8 @@ export class KVClient {
     const prevAmount = currentData.incomeGoal.currentAmount;
     currentData.incomeGoal.currentAmount += amount;
 
-    if (breakdownKey) {
-      // Initialize the breakdown key if it doesn't exist, or add to existing amount
-      const current = currentData.incomeGoal.breakdown[breakdownKey];
-      currentData.incomeGoal.breakdown[breakdownKey] = (current || 0) + amount;
+    if (breakdownKey && currentData.incomeGoal.breakdown[breakdownKey] !== undefined) {
+      (currentData.incomeGoal.breakdown[breakdownKey] as number) += amount;
     }
 
     // Add to historical
@@ -524,13 +396,21 @@ export class KVClient {
     };
     currentData.activityLogs.unshift(activityLog);
 
-    await redis.set(DASHBOARD_KEY, serialize(currentData));
+    if (USE_MOCK) {
+      mockData = currentData;
+    } else {
+      await redis!.set(DASHBOARD_KEY, serialize(currentData));
+    }
     return currentData;
   }
 
   // Clear all data (for testing)
   static async clearAll(): Promise<void> {
-    await redis.del(DASHBOARD_KEY);
+    if (USE_MOCK) {
+      mockData = null;
+    } else {
+      await redis!.del(DASHBOARD_KEY);
+    }
     await this.initializeDashboard();
   }
 }

@@ -35,7 +35,7 @@ export interface AgentInsight {
 export interface Agent {
   id: string;
   name: string;
-  type: 'amazon_fba' | 'tennis_betting' | 'challenge' | 'coordinator' | 'other';
+  type: 'amazon_fba' | 'tennis_betting' | 'challenge' | 'coordinator' | 'other' | 'maintainer';
   status: AgentStatus;
   description: string;
   currentTask?: AgentTask;
@@ -86,6 +86,10 @@ export interface DashboardData {
     lastUpdate: Date;
   };
   timestamp: Date;
+  systemInfo?: {
+    mockMode: boolean;
+    timestamp: string;
+  };
 }
 
 export interface AgentUpdatePayload {
