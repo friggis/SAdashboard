@@ -273,7 +273,16 @@ const TokenUsageCard: React.FC<{ tokenUsage: DashboardData['tokenUsage'] }> = ({
 
       <div className="mb-2 flex items-baseline gap-2">
         <span className="text-3xl font-extrabold text-gray-900">{safePercent.toFixed(2)}%</span>
-        <span className="text-sm text-gray-500">used</span>
+        <span className="text-sm text-gray-500">used (total)</span>
+      </div>
+
+      <div className="mb-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+        <div className="bg-blue-50 rounded px-3 py-2 text-blue-900">
+          Main model usage: <span className="font-semibold">{Number(tokenUsage.bySource?.main || 0).toLocaleString()} tok</span>
+        </div>
+        <div className="bg-emerald-50 rounded px-3 py-2 text-emerald-900">
+          Free model usage: <span className="font-semibold">{Number(tokenUsage.bySource?.free || 0).toLocaleString()} tok</span>
+        </div>
       </div>
 
       <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden mb-4">
@@ -290,7 +299,7 @@ const TokenUsageCard: React.FC<{ tokenUsage: DashboardData['tokenUsage'] }> = ({
             {tokenUsage.lastTasks.map((task, idx) => (
               <div key={`${task.timestamp}-${idx}`} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
                 <div className="text-sm text-gray-700 truncate max-w-[70%]">{task.title}</div>
-                <div className="text-sm font-semibold text-gray-900">{Number(task.tokensUsed).toLocaleString()} tok</div>
+                <div className="text-sm font-semibold text-gray-900">{Number(task.tokensUsed).toLocaleString()} tok {task.source ? `(${task.source})` : ''}</div>
               </div>
             ))}
           </div>

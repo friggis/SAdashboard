@@ -228,8 +228,12 @@ export class KVClient {
           tokenLimit: 1_000_000,
           tokenUsed: 0,
           tokenUsedPercent: 0,
+          bySource: { main: 0, free: 0 },
           lastTasks: [],
         };
+      }
+      if (!dashboard.tokenUsage.bySource) {
+        dashboard.tokenUsage.bySource = { main: 0, free: 0 };
       }
 
       if (missingAgents.length > 0) {
@@ -267,6 +271,7 @@ export class KVClient {
         tokenLimit: 1_000_000,
         tokenUsed: 0,
         tokenUsedPercent: 0,
+        bySource: { main: 0, free: 0 },
         lastTasks: [],
       },
       systemMetrics: {
@@ -373,13 +378,19 @@ export class KVClient {
         tokenLimit: 1_000_000,
         tokenUsed: 0,
         tokenUsedPercent: 0,
+        bySource: { main: 0, free: 0 },
         lastTasks: [],
       };
     }
+    if (!currentData.tokenUsage.bySource) {
+      currentData.tokenUsage.bySource = { main: 0, free: 0 };
+    }
 
+    const source = update.tokenUsage?.source || 'free';
     const tokenDelta = Math.max(0, Number(update.tokenUsage?.usedTokensDelta || 0));
     if (tokenDelta > 0) {
       currentData.tokenUsage.tokenUsed += tokenDelta;
+      currentData.tokenUsage.bySource[source] += tokenDelta;
     }
 
     const taskTokensUsed = Math.max(0, Number(update.tokenUsage?.taskTokensUsed || 0));
@@ -390,6 +401,7 @@ export class KVClient {
         tokensUsed: taskTokensUsed,
         agentId: update.agentId,
         timestamp: new Date(),
+        source,
       });
       currentData.tokenUsage.lastTasks = currentData.tokenUsage.lastTasks.slice(0, 3);
     }

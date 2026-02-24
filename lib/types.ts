@@ -84,7 +84,11 @@ export interface TokenUsageSummary {
   tokenLimit: number;
   tokenUsed: number;
   tokenUsedPercent: number;
-  lastTasks: TaskTokenUsage[];
+  bySource: {
+    main: number;
+    free: number;
+  };
+  lastTasks: (TaskTokenUsage & { source?: 'main' | 'free' })[];
 }
 
 export interface DashboardData {
@@ -118,6 +122,7 @@ export interface AgentUpdatePayload {
     usedTokensDelta?: number;
     taskTokensUsed?: number;
     taskTitle?: string;
+    source?: 'main' | 'free';
   };
 }
 
