@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readFile, readdir } from 'fs/promises';
 import { join } from 'path';
 
-// Base directory for reports - read from memory/agents (where agents actually write)
-// Path: workspace/memory/agents -> from app dir: ../memory/agents
-const REPORTS_BASE = join(process.cwd(), '..', 'memory', 'agents');
+// Prefer runtime-written reports, fallback to bundled public reports for Vercel
+const REPORTS_BASES = [
+  join(process.cwd(), '..', 'memory', 'agents'),
+  join(process.cwd(), 'public', 'reports'),
+];
 
 // Helper to recursively scan reports directory
 async function listReports(dir: string, agentPrefix = ''): Promise<any[]> {
@@ -37,13 +39,17 @@ async function listReports(dir: string, agentPrefix = ''): Promise<any[]> {
 
 // GET /api/reports - list all reports
 export async function GET() {
-  try {
-    const reports = await listReports(REPORTS_BASE);
-    return NextResponse.json(reports);
-  } catch (error) {
-    console.error('Error listing reports:', error);
-    return NextResponse.json({ error: 'Failed to list reports' }, { status: 500 });
+  for (const base of REPORTS_BASES) {
+    try {
+      const reports = await listReports(base);
+      return NextResponse.json(reports);
+    } catch {
+      // Try next base path
+    }
   }
+
+  // Never hard-fail the UI for missing report storage
+  return NextResponse.json([]);
 }
 
 // POST /api/reports - get specific report content (alternative to static fetch)
@@ -55,15 +61,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'agentId and filename required' }, { status: 400 });
     }
 
-    const filePath = join(REPORTS_BASE, agentId, filename);
-    const content = await readFile(filePath, 'utf-8');
+    for (const base of REPORTS_BASES) {
+      try {
+        const filePath = join(base, agentId, filename);
+        const content = await readFile(filePath, 'utf-8');
 
-    return NextResponse.json({ agentId, filename, content }, {
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Content-Type': 'application/json',
-      },
-    });
+        return NextResponse.json({ agentId, filename, content }, {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Content-Type': 'application/json',
+          },
+        });
+      } catch {
+        // try next base path
+      }
+    }
+
+    return NextResponse.json({ error: 'Report not found' }, { status: 404 });
   } catch (error) {
     console.error('Error reading report:', error);
     return NextResponse.json({ error: 'Report not found' }, { status: 404 });

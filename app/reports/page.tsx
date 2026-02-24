@@ -50,11 +50,12 @@ function ReportsContent() {
     fetch('/api/reports')
       .then(r => r.json())
       .then(data => {
-        setReports(data);
+        const safeReports = Array.isArray(data) ? data : [];
+        setReports(safeReports);
         setLoading(false);
         // Auto-select first report for filtered agent
-        if (agentFilter && data.length > 0) {
-          const agentReports = data.filter((r: Report) => r.agentId === agentFilter);
+        if (agentFilter && safeReports.length > 0) {
+          const agentReports = safeReports.filter((r: Report) => r.agentId === agentFilter);
           if (agentReports.length > 0) {
             setSelectedReport(agentReports[0]);
             loadReportContent(agentReports[0]);
