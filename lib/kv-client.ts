@@ -151,14 +151,21 @@ export class KVClient {
 
       // Merge any missing default agents (supports zero-downtime agent additions)
       const defaultAgents = this.getDefaultAgents();
-      const allowedIds = new Set(defaultAgents.map(a => a.id));
       const existingIds = new Set(dashboard.agents.map(a => a.id));
       const missingAgents = defaultAgents.filter(a => !existingIds.has(a.id));
       let changed = false;
 
-      // Prune deprecated agents from live dashboard (reports remain on disk)
+      // Prune only explicitly deprecated legacy agents (keep dynamic/new agents)
+      const deprecatedIds = new Set([
+        'amazon-fba',
+        'tennis-betting',
+        'challenge-agents',
+        'income-researcher-1',
+        'income-researcher-2',
+        'income-researcher-3',
+      ]);
       const beforeCount = dashboard.agents.length;
-      dashboard.agents = dashboard.agents.filter(a => allowedIds.has(a.id));
+      dashboard.agents = dashboard.agents.filter(a => !deprecatedIds.has(a.id));
       if (dashboard.agents.length !== beforeCount) {
         changed = true;
       }
@@ -261,9 +268,26 @@ export class KVClient {
     const currentData = await this.getDashboardData();
     if (!currentData) return null;
 
-    const agentIndex = currentData.agents.findIndex(a => a.id === update.agentId);
+    let agentIndex = currentData.agents.findIndex(a => a.id === update.agentId);
     if (agentIndex === -1) {
-      throw new Error(`Agent ${update.agentId} not found`);
+      // Auto-register dynamic agents so external subagents can report without 500s
+      const dynamicAgent: Agent = {
+        id: update.agentId,
+        name: update.agentId
+          .split('-')
+          .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+          .join(' '),
+        type: 'other',
+        status: update.status ?? 'idle',
+        description: 'Dynamically registered reporting agent',
+        taskQueue: [],
+        recentInsights: [],
+        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
+        lastUpdate: new Date(),
+        assignedGoals: [],
+      };
+      currentData.agents.push(dynamicAgent);
+      agentIndex = currentData.agents.length - 1;
     }
 
     const agent = { ...currentData.agents[agentIndex] };
