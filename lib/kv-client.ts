@@ -233,7 +233,10 @@ export class KVClient {
         };
       }
       if (!dashboard.tokenUsage.bySource) {
-        dashboard.tokenUsage.bySource = { main: 0, free: 0 };
+        dashboard.tokenUsage.bySource = {
+          main: 0,
+          free: Number(dashboard.tokenUsage.tokenUsed || 0),
+        };
       }
 
       if (missingAgents.length > 0) {
