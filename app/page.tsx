@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+
+const RUNNING_STALE_MS = 15 * 60 * 1000;
 import Link from 'next/link';
 import {
   Agent,
@@ -67,6 +69,11 @@ const InsightCard: React.FC<{ insight: AgentInsight }> = ({ insight }) => {
 };
 
 const AgentCard: React.FC<{ agent: Agent }> = ({ agent }) => {
+  const isStaleRunning =
+    agent.status === 'running' &&
+    Date.now() - new Date(agent.lastUpdate).getTime() > RUNNING_STALE_MS;
+  const effectiveStatus: AgentStatus = isStaleRunning ? 'idle' : agent.status;
+
   const statusColors = {
     idle: 'border-gray-200',
     running: 'border-green-500',
@@ -82,16 +89,16 @@ const AgentCard: React.FC<{ agent: Agent }> = ({ agent }) => {
   };
 
   return (
-    <div className={`bg-white rounded-lg shadow border-2 ${statusColors[agent.status]} p-4`}>
+    <div className={`bg-white rounded-lg shadow border-2 ${statusColors[effectiveStatus]} p-4`}>
       <div className="flex justify-between items-start mb-3">
         <div>
           <h3 className="font-bold text-lg">{agent.name}</h3>
           <p className="text-sm text-gray-600">{agent.description}</p>
         </div>
-        <StatusBadge status={agent.status} />
+        <StatusBadge status={effectiveStatus} />
       </div>
 
-      {agent.currentTask && (
+      {!isStaleRunning && agent.currentTask && (
         <div className="mb-4">
           <div className="flex justify-between items-center mb-1">
             <span className="text-sm font-medium">Current Task</span>
@@ -161,6 +168,11 @@ const AgentCard: React.FC<{ agent: Agent }> = ({ agent }) => {
       <div className="mt-3 text-xs text-gray-400 text-right">
         Last update: {new Date(agent.lastUpdate).toLocaleTimeString()}
       </div>
+      {isStaleRunning && (
+        <div className="mt-1 text-xs text-amber-600 text-right">
+          stale running status auto-hidden
+        </div>
+      )}
       <div className="mt-3 text-right border-t pt-3">
         <Link
           href={`/reports?agent=${encodeURIComponent(agent.id)}`}
@@ -404,6 +416,7 @@ export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [darkMode, setDarkMode] = useState(false);
 
   // Fetch dashboard data
   const fetchData = useCallback(async () => {
@@ -426,6 +439,20 @@ export default function Dashboard() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Theme persistence
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('dashboard-dark-mode');
+      if (saved === '1') setDarkMode(true);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('dashboard-dark-mode', darkMode ? '1' : '0');
+    } catch {}
+  }, [darkMode]);
 
   // Poll for updates every 5 seconds
   useEffect(() => {
@@ -460,7 +487,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className={`min-h-screen bg-gray-100 p-6 ${darkMode ? 'dashboard-dark' : ''}`}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8 flex justify-between items-start">
@@ -476,6 +503,12 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex gap-3">
+            <button
+              onClick={() => setDarkMode(v => !v)}
+              className="px-4 py-2 bg-slate-700 text-white rounded hover:bg-slate-800 font-medium"
+            >
+              {darkMode ? '☀️ Light' : '🌙 Dark'}
+            </button>
             <Link
               href="/reports"
               className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium"
