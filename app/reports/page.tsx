@@ -18,6 +18,7 @@ function ReportsContent() {
   const searchParams = useSearchParams();
   const agentFilter = searchParams.get('agent');
   const fileFilter = searchParams.get('file');
+  const [darkMode, setDarkMode] = useState(false);
 
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +27,19 @@ function ReportsContent() {
   const [error, setError] = useState<string | null>(null);
   const [readReports, setReadReports] = useState<Set<string>>(new Set());
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('dashboard-dark-mode');
+      if (saved === '1') setDarkMode(true);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('dashboard-dark-mode', darkMode ? '1' : '0');
+    } catch {}
+  }, [darkMode]);
 
   // Load read status from localStorage on mount
   useEffect(() => {
@@ -159,7 +173,7 @@ function ReportsContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className={`min-h-screen bg-gray-100 p-6 ${darkMode ? 'dashboard-dark' : ''}`}>
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
@@ -172,6 +186,12 @@ function ReportsContent() {
               </p>
             </div>
             <div className="flex flex-wrap gap-3 items-center">
+              <button
+                onClick={() => setDarkMode(v => !v)}
+                className="px-4 py-2 bg-slate-700 text-white rounded hover:bg-slate-800 font-medium"
+              >
+                {darkMode ? '☀️ Light' : '🌙 Dark'}
+              </button>
               {/* Jump to Agent dropdown */}
               <div className="flex items-center gap-2">
                 <label htmlFor="agent-select" className="text-sm font-medium text-gray-700">
