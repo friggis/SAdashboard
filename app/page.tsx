@@ -517,6 +517,12 @@ export default function Dashboard() {
               {darkMode ? '☀️ Light' : '🌙 Dark'}
             </button>
             <Link
+              href="/kdp"
+              className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 font-medium"
+            >
+              🎳 KDP Project
+            </Link>
+            <Link
               href="/recovery"
               className="px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700 font-medium"
             >
