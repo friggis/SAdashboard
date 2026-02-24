@@ -17,6 +17,7 @@ interface Report {
 function ReportsContent() {
   const searchParams = useSearchParams();
   const agentFilter = searchParams.get('agent');
+  const fileFilter = searchParams.get('file');
 
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,8 +58,12 @@ function ReportsContent() {
         if (agentFilter && safeReports.length > 0) {
           const agentReports = safeReports.filter((r: Report) => r.agentId === agentFilter);
           if (agentReports.length > 0) {
-            setSelectedReport(agentReports[0]);
-            loadReportContent(agentReports[0]);
+            const preferred = fileFilter
+              ? agentReports.find((r: Report) => r.filename === fileFilter)
+              : null;
+            const target = preferred || agentReports[0];
+            setSelectedReport(target);
+            loadReportContent(target);
           }
         }
       })
@@ -66,7 +71,7 @@ function ReportsContent() {
         setError('Failed to load reports');
         setLoading(false);
       });
-  }, [agentFilter]);
+  }, [agentFilter, fileFilter]);
 
   const loadReportContent = async (report: Report) => {
     setSelectedReport(report);
@@ -243,7 +248,9 @@ function ReportsContent() {
                             ? 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
                             : 'border-blue-300 bg-blue-25 hover:bg-blue-50'
                         }`}
-                        onClick={() => loadReport(report)}
+                        onClick={() => {
+                          window.location.href = `/reports?agent=${encodeURIComponent(report.agentId)}&file=${encodeURIComponent(report.filename)}`;
+                        }}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1">
