@@ -274,6 +274,13 @@ const TokenUsageCard: React.FC<{ tokenUsage: DashboardData['tokenUsage'] }> = ({
     return 'from-red-500 to-rose-500';
   };
 
+  const visibleTasks = (tokenUsage.lastTasks || [])
+    .filter(task => {
+      const t = String(task.title || '').toLowerCase();
+      return !(t.includes('keepalive') || t.includes('heartbeat'));
+    })
+    .slice(0, 5);
+
   return (
     <div className="bg-white rounded-xl shadow p-5 border border-gray-100">
       <div className="flex items-center justify-between mb-2">
@@ -305,10 +312,10 @@ const TokenUsageCard: React.FC<{ tokenUsage: DashboardData['tokenUsage'] }> = ({
       </div>
 
       <div>
-        <div className="text-sm font-semibold text-gray-800 mb-2">Last 3 tasks</div>
-        {tokenUsage.lastTasks?.length ? (
+        <div className="text-sm font-semibold text-gray-800 mb-2">Last 5 tasks</div>
+        {visibleTasks.length ? (
           <div className="space-y-2">
-            {tokenUsage.lastTasks.map((task, idx) => (
+            {visibleTasks.map((task, idx) => (
               <div key={`${task.timestamp}-${idx}`} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
                 <div className="text-sm text-gray-700 truncate max-w-[70%]">{task.title}</div>
                 <div className="text-sm font-semibold text-gray-900">{Number(task.tokensUsed).toLocaleString()} tok {task.source ? `(${task.source})` : ''}</div>

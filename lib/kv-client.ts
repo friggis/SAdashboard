@@ -410,7 +410,7 @@ export class KVClient {
       currentData.tokenUsage.bySource = { main: 0, free: 0 };
     }
 
-    const source = update.tokenUsage?.source || 'free';
+    const source = update.tokenUsage?.source || 'main';
     const tokenDelta = Math.max(0, Number(update.tokenUsage?.usedTokensDelta || 0));
     if (tokenDelta > 0) {
       currentData.tokenUsage.tokenUsed += tokenDelta;
@@ -432,7 +432,7 @@ export class KVClient {
           timestamp: new Date(),
           source,
         });
-        currentData.tokenUsage.lastTasks = currentData.tokenUsage.lastTasks.slice(0, 3);
+        currentData.tokenUsage.lastTasks = currentData.tokenUsage.lastTasks.slice(0, 5);
       }
     }
 
