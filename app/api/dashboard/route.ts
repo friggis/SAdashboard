@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { agentId, status, currentTask, newInsight, metrics, message } = body;
+    const { agentId, status, currentTask, newInsight, metrics, message, tokenUsage } = body;
 
     if (!agentId) {
       return NextResponse.json(
@@ -54,6 +54,7 @@ export async function POST(request: NextRequest) {
       newInsight,
       metrics,
       message,
+      tokenUsage,
     };
 
     const updatedData = await KVClient.updateAgent(update);

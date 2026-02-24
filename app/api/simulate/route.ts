@@ -109,13 +109,21 @@ async function simulateCompleteTask(agentId: string, incomeAmount?: number) {
   const currentData = await KVClient.getDashboardData();
   const agent = currentData?.agents.find(a => a.id === agentId);
 
+  const simulatedTaskTokens = Math.floor(Math.random() * 4000) + 800;
+
   let update: import('@/lib/types').AgentUpdatePayload = {
     agentId,
     currentTask: {
       id: agent?.currentTask?.id || `task_${Date.now()}`,
+      title: agent?.currentTask?.title || 'Completed simulated task',
       status: 'completed',
       progress: 100,
       endTime: new Date(),
+    },
+    tokenUsage: {
+      usedTokensDelta: simulatedTaskTokens,
+      taskTokensUsed: simulatedTaskTokens,
+      taskTitle: agent?.currentTask?.title || 'Completed simulated task',
     },
   };
 

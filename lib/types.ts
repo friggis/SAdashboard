@@ -73,10 +73,25 @@ export interface IncomeGoal {
   }[];
 }
 
+export interface TaskTokenUsage {
+  title: string;
+  tokensUsed: number;
+  agentId: string;
+  timestamp: Date;
+}
+
+export interface TokenUsageSummary {
+  tokenLimit: number;
+  tokenUsed: number;
+  tokenUsedPercent: number;
+  lastTasks: TaskTokenUsage[];
+}
+
 export interface DashboardData {
   agents: Agent[];
   activityLogs: ActivityLog[];
   incomeGoal: IncomeGoal;
+  tokenUsage: TokenUsageSummary;
   systemMetrics: {
     totalAgents: number;
     runningAgents: number;
@@ -99,6 +114,11 @@ export interface AgentUpdatePayload {
   newInsight?: Omit<AgentInsight, 'id' | 'timestamp'>;
   metrics?: Partial<AgentMetrics>;
   message?: string; // For activity logs
+  tokenUsage?: {
+    usedTokensDelta?: number;
+    taskTokensUsed?: number;
+    taskTitle?: string;
+  };
 }
 
 // Helper to create default agent

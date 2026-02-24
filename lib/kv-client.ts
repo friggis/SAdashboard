@@ -1,5 +1,5 @@
 import { Redis } from 'ioredis';
-import { Agent, ActivityLog, IncomeGoal, DashboardData, AgentUpdatePayload } from './types';
+import { Agent, ActivityLog, DashboardData, AgentUpdatePayload } from './types';
 
 const DASHBOARD_KEY = 'dashboard:data';
 const LOCK_KEY = 'dashboard:lock';
@@ -222,6 +222,16 @@ export class KVClient {
       const existingIds = new Set(dashboard.agents.map(a => a.id));
       const missingAgents = defaultAgents.filter(a => !existingIds.has(a.id));
 
+      // Backfill token usage for older stored data
+      if (!dashboard.tokenUsage) {
+        dashboard.tokenUsage = {
+          tokenLimit: 1_000_000,
+          tokenUsed: 0,
+          tokenUsedPercent: 0,
+          lastTasks: [],
+        };
+      }
+
       if (missingAgents.length > 0) {
         console.log(`[KVClient] Merging ${missingAgents.length} missing agent(s) into dashboard: ${missingAgents.map(a => a.id).join(', ')}`);
         dashboard.agents.push(...missingAgents);
@@ -252,6 +262,12 @@ export class KVClient {
         period: 'monthly',
         breakdown: {},
         historical: [],
+      },
+      tokenUsage: {
+        tokenLimit: 1_000_000,
+        tokenUsed: 0,
+        tokenUsedPercent: 0,
+        lastTasks: [],
       },
       systemMetrics: {
         totalAgents: defaultAgents.length,
@@ -350,6 +366,38 @@ export class KVClient {
         currentData.activityLogs = currentData.activityLogs.slice(0, 100);
       }
     }
+
+    // Update token usage summary
+    if (!currentData.tokenUsage) {
+      currentData.tokenUsage = {
+        tokenLimit: 1_000_000,
+        tokenUsed: 0,
+        tokenUsedPercent: 0,
+        lastTasks: [],
+      };
+    }
+
+    const tokenDelta = Math.max(0, Number(update.tokenUsage?.usedTokensDelta || 0));
+    if (tokenDelta > 0) {
+      currentData.tokenUsage.tokenUsed += tokenDelta;
+    }
+
+    const taskTokensUsed = Math.max(0, Number(update.tokenUsage?.taskTokensUsed || 0));
+    const taskTitle = update.tokenUsage?.taskTitle || update.currentTask?.title;
+    if (taskTokensUsed > 0 && taskTitle) {
+      currentData.tokenUsage.lastTasks.unshift({
+        title: taskTitle,
+        tokensUsed: taskTokensUsed,
+        agentId: update.agentId,
+        timestamp: new Date(),
+      });
+      currentData.tokenUsage.lastTasks = currentData.tokenUsage.lastTasks.slice(0, 3);
+    }
+
+    currentData.tokenUsage.tokenUsedPercent =
+      currentData.tokenUsage.tokenLimit > 0
+        ? (currentData.tokenUsage.tokenUsed / currentData.tokenUsage.tokenLimit) * 100
+        : 0;
 
     if (USE_MOCK) {
       mockData = currentData;

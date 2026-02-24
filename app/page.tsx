@@ -252,6 +252,56 @@ const IncomeGoalCard: React.FC<{ goal: IncomeGoal }> = ({ goal }) => {
   );
 };
 
+const TokenUsageCard: React.FC<{ tokenUsage: DashboardData['tokenUsage'] }> = ({ tokenUsage }) => {
+  const usedPercent = Number(tokenUsage.tokenUsedPercent || 0);
+  const safePercent = Math.min(100, Math.max(0, usedPercent));
+
+  const getBarColor = (pct: number) => {
+    if (pct < 60) return 'from-emerald-500 to-green-500';
+    if (pct < 85) return 'from-yellow-500 to-amber-500';
+    return 'from-red-500 to-rose-500';
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow p-5 border border-gray-100">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="font-bold text-xl text-gray-900">Token Usage</h3>
+        <span className="text-sm text-gray-500">
+          {tokenUsage.tokenUsed.toLocaleString()} / {tokenUsage.tokenLimit.toLocaleString()} tokens
+        </span>
+      </div>
+
+      <div className="mb-2 flex items-baseline gap-2">
+        <span className="text-3xl font-extrabold text-gray-900">{safePercent.toFixed(2)}%</span>
+        <span className="text-sm text-gray-500">used</span>
+      </div>
+
+      <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden mb-4">
+        <div
+          className={`h-4 rounded-full bg-gradient-to-r ${getBarColor(safePercent)} transition-all duration-500`}
+          style={{ width: `${safePercent}%` }}
+        ></div>
+      </div>
+
+      <div>
+        <div className="text-sm font-semibold text-gray-800 mb-2">Last 3 tasks</div>
+        {tokenUsage.lastTasks?.length ? (
+          <div className="space-y-2">
+            {tokenUsage.lastTasks.map((task, idx) => (
+              <div key={`${task.timestamp}-${idx}`} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
+                <div className="text-sm text-gray-700 truncate max-w-[70%]">{task.title}</div>
+                <div className="text-sm font-semibold text-gray-900">{Number(task.tokensUsed).toLocaleString()} tok</div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-sm text-gray-500 italic">No tracked tasks yet.</div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const ActivityFeed: React.FC<{ logs: ActivityLog[] }> = ({ logs }) => {
   const getTypeColor = (type: ActivityLog['type']) => {
     switch (type) {
@@ -441,6 +491,11 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {/* Token Usage */}
+        <div className="mb-8">
+          <TokenUsageCard tokenUsage={data.tokenUsage} />
+        </div>
 
         {/* Income Goal */}
         <div className="mb-8">
