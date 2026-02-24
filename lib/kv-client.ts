@@ -38,42 +38,8 @@ export class KVClient {
         lastUpdate: new Date(),
         assignedGoals: ['Monitor dashboard uptime', 'Run health checks every 30 minutes', 'Report status to dashboard'],
       },
-      {
-        id: 'amazon-fba',
-        name: 'Amazon FBA Research',
-        type: 'amazon_fba',
-        status: 'idle',
-        description: 'Researches profitable Amazon FBA products and market opportunities',
-        taskQueue: [],
-        recentInsights: [],
-        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
-        lastUpdate: new Date(),
-        assignedGoals: ['Identify 10 profitable product niches', 'Analyze market trends'],
-      },
-      {
-        id: 'tennis-betting',
-        name: 'Tennis Betting Research',
-        type: 'tennis_betting',
-        status: 'idle',
-        description: 'Analyzes tennis matches for betting opportunities',
-        taskQueue: [],
-        recentInsights: [],
-        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
-        lastUpdate: new Date(),
-        assignedGoals: ['Find value bets', 'Track player statistics'],
-      },
-      {
-        id: 'challenge-agents',
-        name: 'Challenge Agents',
-        type: 'challenge',
-        status: 'idle',
-        description: 'Runs various challenge and arbitrage opportunities',
-        taskQueue: [],
-        recentInsights: [],
-        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
-        lastUpdate: new Date(),
-        assignedGoals: ['Complete weekly challenges', 'Maximize arbitrage returns'],
-      },
+      // Legacy vertical agents removed from active dashboard list
+
       {
         id: 'coordinator',
         name: 'Coordinator',
@@ -147,43 +113,8 @@ export class KVClient {
         lastUpdate: new Date(),
         assignedGoals: ['Combine all research into coherent plan', 'Prioritize by ROI/time', 'Create 3/6/12 month milestones', 'Produce final Path to £5k/mo document'],
       },
-      // Additional parallel researcher slots
-      {
-        id: 'income-researcher-1',
-        name: 'Income Researcher 1',
-        type: 'other',
-        status: 'idle',
-        description: 'Parallel income research worker',
-        taskQueue: [],
-        recentInsights: [],
-        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
-        lastUpdate: new Date(),
-        assignedGoals: [],
-      },
-      {
-        id: 'income-researcher-2',
-        name: 'Income Researcher 2',
-        type: 'other',
-        status: 'idle',
-        description: 'Parallel income research worker',
-        taskQueue: [],
-        recentInsights: [],
-        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
-        lastUpdate: new Date(),
-        assignedGoals: [],
-      },
-      {
-        id: 'income-researcher-3',
-        name: 'Income Researcher 3',
-        type: 'other',
-        status: 'idle',
-        description: 'Parallel income research worker',
-        taskQueue: [],
-        recentInsights: [],
-        metrics: { cpu: 0, memory: 0, uptime: 0, tasksCompleted: 0, tasksFailed: 0 },
-        lastUpdate: new Date(),
-        assignedGoals: [],
-      },
+      // Parallel researcher clones removed from active dashboard list
+
       // PAID Specialist: Gemini 3 Pro for complex tasks
       {
         id: 'paided-gemini-expert',
@@ -220,9 +151,17 @@ export class KVClient {
 
       // Merge any missing default agents (supports zero-downtime agent additions)
       const defaultAgents = this.getDefaultAgents();
+      const allowedIds = new Set(defaultAgents.map(a => a.id));
       const existingIds = new Set(dashboard.agents.map(a => a.id));
       const missingAgents = defaultAgents.filter(a => !existingIds.has(a.id));
       let changed = false;
+
+      // Prune deprecated agents from live dashboard (reports remain on disk)
+      const beforeCount = dashboard.agents.length;
+      dashboard.agents = dashboard.agents.filter(a => allowedIds.has(a.id));
+      if (dashboard.agents.length !== beforeCount) {
+        changed = true;
+      }
 
       // Backfill token usage for older stored data
       if (!dashboard.tokenUsage) {
