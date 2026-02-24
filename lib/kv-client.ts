@@ -4,6 +4,7 @@ import { Agent, ActivityLog, DashboardData, AgentUpdatePayload } from './types';
 const DASHBOARD_KEY = 'dashboard:data';
 const LOCK_KEY = 'dashboard:lock';
 const LOCK_TTL = 10; // seconds
+const RUNNING_STALE_MS = 15 * 60 * 1000; // 15 minutes
 
 // Check if we should use in-memory mock (for local development without Redis)
 const USE_MOCK = !process.env.REDIS_URL;
@@ -221,6 +222,7 @@ export class KVClient {
       const defaultAgents = this.getDefaultAgents();
       const existingIds = new Set(dashboard.agents.map(a => a.id));
       const missingAgents = defaultAgents.filter(a => !existingIds.has(a.id));
+      let changed = false;
 
       // Backfill token usage for older stored data
       if (!dashboard.tokenUsage) {
@@ -231,20 +233,39 @@ export class KVClient {
           bySource: { main: 0, free: 0 },
           lastTasks: [],
         };
+        changed = true;
       }
       if (!dashboard.tokenUsage.bySource) {
         dashboard.tokenUsage.bySource = {
           main: 0,
           free: Number(dashboard.tokenUsage.tokenUsed || 0),
         };
+        changed = true;
+      }
+
+      // Normalize stale "running" agents to idle
+      const nowMs = Date.now();
+      for (const agent of dashboard.agents) {
+        const lastUpdateMs = new Date(agent.lastUpdate).getTime();
+        if (agent.status === 'running' && Number.isFinite(lastUpdateMs) && nowMs - lastUpdateMs > RUNNING_STALE_MS) {
+          agent.status = 'idle';
+          changed = true;
+        }
       }
 
       if (missingAgents.length > 0) {
         console.log(`[KVClient] Merging ${missingAgents.length} missing agent(s) into dashboard: ${missingAgents.map(a => a.id).join(', ')}`);
         dashboard.agents.push(...missingAgents);
-        dashboard.systemMetrics.totalAgents = dashboard.agents.length;
+        changed = true;
+      }
+
+      // Keep system metrics aligned with latest agent state
+      dashboard.systemMetrics.totalAgents = dashboard.agents.length;
+      dashboard.systemMetrics.runningAgents = dashboard.agents.filter(a => a.status === 'running').length;
+      dashboard.systemMetrics.totalInsights = dashboard.agents.reduce((sum, a) => sum + a.recentInsights.length, 0);
+
+      if (changed) {
         dashboard.timestamp = new Date();
-        // Persist the merged state
         await redis!.set(DASHBOARD_KEY, serialize(dashboard));
       }
 
