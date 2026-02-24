@@ -420,14 +420,20 @@ export class KVClient {
     const taskTokensUsed = Math.max(0, Number(update.tokenUsage?.taskTokensUsed || 0));
     const taskTitle = update.tokenUsage?.taskTitle || update.currentTask?.title;
     if (taskTokensUsed > 0 && taskTitle) {
-      currentData.tokenUsage.lastTasks.unshift({
-        title: taskTitle,
-        tokensUsed: taskTokensUsed,
-        agentId: update.agentId,
-        timestamp: new Date(),
-        source,
-      });
-      currentData.tokenUsage.lastTasks = currentData.tokenUsage.lastTasks.slice(0, 3);
+      const normalizedTitle = String(taskTitle).toLowerCase();
+      const isKeepalive =
+        normalizedTitle.includes('keepalive') || normalizedTitle.includes('heartbeat');
+
+      if (!isKeepalive) {
+        currentData.tokenUsage.lastTasks.unshift({
+          title: taskTitle,
+          tokensUsed: taskTokensUsed,
+          agentId: update.agentId,
+          timestamp: new Date(),
+          source,
+        });
+        currentData.tokenUsage.lastTasks = currentData.tokenUsage.lastTasks.slice(0, 3);
+      }
     }
 
     currentData.tokenUsage.tokenUsedPercent =
