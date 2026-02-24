@@ -517,6 +517,12 @@ export default function Dashboard() {
               {darkMode ? '☀️ Light' : '🌙 Dark'}
             </button>
             <Link
+              href="/recovery"
+              className="px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700 font-medium"
+            >
+              🛟 Recovery
+            </Link>
+            <Link
               href="/reports"
               className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium"
             >
