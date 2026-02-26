@@ -72,7 +72,7 @@ function checklistBadge(status: string) {
 
 export default function KaizenTrackingPage() {
   const [darkMode, setDarkMode] = useState(true);
-  const testAppUrl = process.env.NEXT_PUBLIC_KAIZEN_TEST_URL || 'https://example.com/kaizen-test-app';
+  const testAppUrl = process.env.NEXT_PUBLIC_KAIZEN_TEST_URL || 'https://kaizenbowling.vercel.app';
 
   const pageBg = darkMode ? 'bg-slate-950' : 'bg-gray-100';
   const cardBg = darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white';
