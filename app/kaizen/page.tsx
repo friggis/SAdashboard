@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { useState } from 'react';
 
 const phasePlan = [
   {
@@ -68,32 +71,47 @@ function checklistBadge(status: string) {
 }
 
 export default function KaizenTrackingPage() {
+  const [darkMode, setDarkMode] = useState(true);
   const testAppUrl = process.env.NEXT_PUBLIC_KAIZEN_TEST_URL || 'https://example.com/kaizen-test-app';
 
+  const pageBg = darkMode ? 'bg-slate-950' : 'bg-gray-100';
+  const cardBg = darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white';
+  const titleText = darkMode ? 'text-slate-100' : 'text-gray-900';
+  const bodyText = darkMode ? 'text-slate-300' : 'text-gray-700';
+  const mutedText = darkMode ? 'text-slate-400' : 'text-gray-600';
+
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className={`min-h-screen p-6 ${pageBg}`}>
       <div className="max-w-6xl mx-auto space-y-6">
-        <div className="bg-white rounded-xl shadow p-6">
+        <div className={`rounded-xl shadow p-6 ${cardBg}`}>
           <div className="flex flex-wrap justify-between items-start gap-3">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Kaizen App Development Tracker</h1>
-              <p className="text-gray-600 mt-2">
+              <h1 className={`text-3xl font-bold ${titleText}`}>Kaizen App Development Tracker</h1>
+              <p className={`mt-2 ${mutedText}`}>
                 Dedicated planning and execution board for Kaizen product delivery.
               </p>
             </div>
-            <Link href="/" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium">
-              ← Dashboard
-            </Link>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setDarkMode((v) => !v)}
+                className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 font-medium"
+              >
+                {darkMode ? '☀️ Light' : '🌙 Dark'}
+              </button>
+              <Link href="/" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium">
+                ← Dashboard
+              </Link>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Project Plan Phases</h2>
+        <div className={`rounded-xl shadow p-6 ${cardBg}`}>
+          <h2 className={`text-xl font-semibold mb-4 ${titleText}`}>Project Plan Phases</h2>
           <div className="space-y-4">
             {phasePlan.map((phase) => (
-              <div key={phase.phase} className="border border-gray-200 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900">{phase.phase}</h3>
-                <ul className="list-disc pl-5 mt-2 text-sm text-gray-700 space-y-1">
+              <div key={phase.phase} className={`rounded-lg p-4 ${darkMode ? 'border border-slate-700' : 'border border-gray-200'}`}>
+                <h3 className={`font-semibold ${titleText}`}>{phase.phase}</h3>
+                <ul className={`list-disc pl-5 mt-2 text-sm space-y-1 ${bodyText}`}>
                   {phase.goals.map((goal) => (
                     <li key={goal}>{goal}</li>
                   ))}
@@ -104,34 +122,42 @@ export default function KaizenTrackingPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Progress Checklist</h2>
+          <div className={`rounded-xl shadow p-6 ${cardBg}`}>
+            <h2 className={`text-xl font-semibold mb-4 ${titleText}`}>Progress Checklist</h2>
             <ul className="space-y-3">
               {progressChecklist.map((entry) => (
-                <li key={entry.item} className="flex items-start justify-between gap-3 border-b border-gray-100 pb-2">
-                  <span className="text-sm text-gray-800">{entry.item}</span>
-                  <span className="text-xs font-medium whitespace-nowrap text-gray-700">{checklistBadge(entry.status)}</span>
+                <li
+                  key={entry.item}
+                  className={`flex items-start justify-between gap-3 pb-2 ${darkMode ? 'border-b border-slate-800' : 'border-b border-gray-100'}`}
+                >
+                  <span className={`text-sm ${darkMode ? 'text-slate-200' : 'text-gray-800'}`}>{entry.item}</span>
+                  <span className={`text-xs font-medium whitespace-nowrap ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>
+                    {checklistBadge(entry.status)}
+                  </span>
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="bg-white rounded-xl shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Key Decisions</h2>
+          <div className={`rounded-xl shadow p-6 ${cardBg}`}>
+            <h2 className={`text-xl font-semibold mb-4 ${titleText}`}>Key Decisions</h2>
             <div className="space-y-4">
               {keyDecisions.map((decision) => (
-                <div key={decision.title} className="border-l-4 border-indigo-500 bg-indigo-50/40 p-3 rounded-r-lg">
-                  <h3 className="font-semibold text-gray-900">{decision.title}</h3>
-                  <p className="text-sm text-gray-700 mt-1">{decision.detail}</p>
+                <div
+                  key={decision.title}
+                  className={`border-l-4 p-3 rounded-r-lg ${darkMode ? 'border-indigo-400 bg-indigo-950/40' : 'border-indigo-500 bg-indigo-50/40'}`}
+                >
+                  <h3 className={`font-semibold ${titleText}`}>{decision.title}</h3>
+                  <p className={`text-sm mt-1 ${bodyText}`}>{decision.detail}</p>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow p-6 border-2 border-dashed border-green-400">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Test Updated App</h2>
-          <p className="text-sm text-gray-700 mb-3">
+        <div className={`rounded-xl shadow p-6 border-2 border-dashed ${darkMode ? 'border-green-500 bg-slate-900' : 'border-green-400 bg-white'}`}>
+          <h2 className={`text-xl font-semibold mb-2 ${titleText}`}>Test Updated App</h2>
+          <p className={`text-sm mb-3 ${bodyText}`}>
             Use this link placeholder for QA/UAT access. Configure with <code>NEXT_PUBLIC_KAIZEN_TEST_URL</code>.
           </p>
           <a
@@ -142,7 +168,7 @@ export default function KaizenTrackingPage() {
           >
             Open Test Build ↗
           </a>
-          <p className="text-xs text-gray-500 mt-2 break-all">Current URL: {testAppUrl}</p>
+          <p className={`text-xs mt-2 break-all ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>Current URL: {testAppUrl}</p>
         </div>
       </div>
     </div>
