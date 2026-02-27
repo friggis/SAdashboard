@@ -64,6 +64,45 @@ const keyDecisions = [
   },
 ];
 
+const mobileRoadmap = [
+  {
+    phase: 'Mobile Phase A — Stabilize Web Core',
+    timeline: '2–4 weeks',
+    items: [
+      'Finish web requirements: offline sync, single-device policy, pricing gates, reliable calculations',
+      'Fix lint/test baseline and lock release criteria',
+      'Ensure backend + auth + entitlement checks are stable',
+    ],
+  },
+  {
+    phase: 'Mobile Phase B — Shared Logic + API Contract',
+    timeline: '1–2 weeks',
+    items: [
+      'Move business logic into shared modules',
+      'Document API contract for scores/sync/subscriptions',
+      'Add sync conflict handling + telemetry events',
+    ],
+  },
+  {
+    phase: 'Mobile Phase C — Build iOS + Android Apps',
+    timeline: '3–6 weeks',
+    items: [
+      'Implement app shell (React Native/Expo or Capacitor route)',
+      'Wire offline storage + background sync on device',
+      'Adapt UI/UX for touch, navigation, and mobile states',
+    ],
+  },
+  {
+    phase: 'Mobile Phase D — Payments + Store Readiness',
+    timeline: '2–6 weeks',
+    items: [
+      'Implement Apple IAP + Google Play Billing for subscriptions',
+      'Add restore purchases, entitlement sync, and support flow',
+      'Prepare App Store/Play Store listing, privacy policy, and submission assets',
+    ],
+  },
+];
+
 function checklistBadge(status: string) {
   if (status === 'done') return '✅ Done';
   if (status === 'in-progress') return '🟡 In Progress';
@@ -152,6 +191,30 @@ export default function KaizenTrackingPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+
+        <div className={`rounded-xl shadow p-6 ${cardBg}`}>
+          <h2 className={`text-xl font-semibold mb-4 ${titleText}`}>Web → iOS + Android Roadmap</h2>
+          <p className={`text-sm mb-4 ${bodyText}`}>
+            This is the phased plan to ship mobile apps safely after web stabilization.
+          </p>
+          <div className="space-y-4">
+            {mobileRoadmap.map((phase) => (
+              <div key={phase.phase} className={`rounded-lg p-4 ${darkMode ? 'border border-slate-700' : 'border border-gray-200'}`}>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className={`font-semibold ${titleText}`}>{phase.phase}</h3>
+                  <span className={`text-xs px-2 py-1 rounded ${darkMode ? 'bg-slate-800 text-slate-300' : 'bg-gray-100 text-gray-700'}`}>
+                    {phase.timeline}
+                  </span>
+                </div>
+                <ul className={`list-disc pl-5 mt-2 text-sm space-y-1 ${bodyText}`}>
+                  {phase.items.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         </div>
 
