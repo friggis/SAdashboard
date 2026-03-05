@@ -1,6 +1,9 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+
+const RUNNING_STALE_MS = 15 * 60 * 1000;
+import Link from 'next/link';
 import {
   Agent,
   ActivityLog,
@@ -66,6 +69,11 @@ const InsightCard: React.FC<{ insight: AgentInsight }> = ({ insight }) => {
 };
 
 const AgentCard: React.FC<{ agent: Agent }> = ({ agent }) => {
+  const isStaleRunning =
+    agent.status === 'running' &&
+    Date.now() - new Date(agent.lastUpdate).getTime() > RUNNING_STALE_MS;
+  const effectiveStatus: AgentStatus = isStaleRunning ? 'idle' : agent.status;
+
   const statusColors = {
     idle: 'border-gray-200',
     running: 'border-green-500',
@@ -81,16 +89,16 @@ const AgentCard: React.FC<{ agent: Agent }> = ({ agent }) => {
   };
 
   return (
-    <div className={`bg-white rounded-lg shadow border-2 ${statusColors[agent.status]} p-4`}>
+    <div className={`bg-white rounded-lg shadow border-2 ${statusColors[effectiveStatus]} p-4`}>
       <div className="flex justify-between items-start mb-3">
         <div>
           <h3 className="font-bold text-lg">{agent.name}</h3>
           <p className="text-sm text-gray-600">{agent.description}</p>
         </div>
-        <StatusBadge status={agent.status} />
+        <StatusBadge status={effectiveStatus} />
       </div>
 
-      {agent.currentTask && (
+      {!isStaleRunning && agent.currentTask && (
         <div className="mb-4">
           <div className="flex justify-between items-center mb-1">
             <span className="text-sm font-medium">Current Task</span>
@@ -159,6 +167,27 @@ const AgentCard: React.FC<{ agent: Agent }> = ({ agent }) => {
 
       <div className="mt-3 text-xs text-gray-400 text-right">
         Last update: {new Date(agent.lastUpdate).toLocaleTimeString()}
+      </div>
+      {isStaleRunning && (
+        <div className="mt-1 text-xs text-amber-600 text-right">
+          stale running status auto-hidden
+        </div>
+      )}
+      <div className="mt-3 text-right border-t pt-3 flex justify-end gap-3">
+        {agent.name === 'Kaizen Bowling App' && (
+          <Link
+            href="/marketing"
+            className="inline-flex items-center gap-1 px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 font-medium shadow-sm"
+          >
+            📢 Marketing
+          </Link>
+        )}
+        <Link
+          href={`/reports?agent=${encodeURIComponent(agent.id)}`}
+          className="text-blue-600 hover:text-blue-800 text-sm font-medium self-center"
+        >
+          📄 View Report →
+        </Link>
       </div>
     </div>
   );
@@ -239,6 +268,72 @@ const IncomeGoalCard: React.FC<{ goal: IncomeGoal }> = ({ goal }) => {
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+const TokenUsageCard: React.FC<{ tokenUsage: DashboardData['tokenUsage'] }> = ({ tokenUsage }) => {
+  const usedPercent = Number(tokenUsage.tokenUsedPercent || 0);
+  const safePercent = Math.min(100, Math.max(0, usedPercent));
+
+  const getBarColor = (pct: number) => {
+    if (pct < 60) return 'from-emerald-500 to-green-500';
+    if (pct < 85) return 'from-yellow-500 to-amber-500';
+    return 'from-red-500 to-rose-500';
+  };
+
+  const visibleTasks = (tokenUsage.lastTasks || [])
+    .filter(task => {
+      const t = String(task.title || '').toLowerCase();
+      return !(t.includes('keepalive') || t.includes('heartbeat'));
+    })
+    .slice(0, 5);
+
+  return (
+    <div className="bg-white rounded-xl shadow p-5 border border-gray-100">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="font-bold text-xl text-gray-900">Token Usage</h3>
+        <span className="text-sm text-gray-500">
+          {tokenUsage.tokenUsed.toLocaleString()} / {tokenUsage.tokenLimit.toLocaleString()} tokens
+        </span>
+      </div>
+
+      <div className="mb-2 flex items-baseline gap-2">
+        <span className="text-3xl font-extrabold text-gray-900">{safePercent.toFixed(2)}%</span>
+        <span className="text-sm text-gray-500">used (total)</span>
+      </div>
+
+      <div className="mb-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+        <div className="bg-blue-50 rounded px-3 py-2 text-blue-900">
+          Main model usage: <span className="font-semibold">{Number(tokenUsage.bySource?.main || 0).toLocaleString()} tok</span>
+        </div>
+        <div className="bg-emerald-50 rounded px-3 py-2 text-emerald-900">
+          Free model usage: <span className="font-semibold">{Number(tokenUsage.bySource?.free || 0).toLocaleString()} tok</span>
+        </div>
+      </div>
+
+      <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden mb-4">
+        <div
+          className={`h-4 rounded-full bg-gradient-to-r ${getBarColor(safePercent)} transition-all duration-500`}
+          style={{ width: `${safePercent}%` }}
+        ></div>
+      </div>
+
+      <div>
+        <div className="text-sm font-semibold text-gray-800 mb-2">Last 5 tasks</div>
+        {visibleTasks.length ? (
+          <div className="space-y-2">
+            {visibleTasks.map((task, idx) => (
+              <div key={`${task.timestamp}-${idx}`} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
+                <div className="text-sm text-gray-700 truncate max-w-[70%]">{task.title}</div>
+                <div className="text-sm font-semibold text-gray-900">{Number(task.tokensUsed).toLocaleString()} tok {task.source ? `(${task.source})` : ''}</div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-sm text-gray-500 italic">No tracked tasks yet.</div>
+        )}
+      </div>
     </div>
   );
 };
@@ -336,6 +431,7 @@ export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [darkMode, setDarkMode] = useState(false);
 
   // Fetch dashboard data
   const fetchData = useCallback(async () => {
@@ -358,6 +454,20 @@ export default function Dashboard() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Theme persistence
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('dashboard-dark-mode');
+      if (saved === '1') setDarkMode(true);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('dashboard-dark-mode', darkMode ? '1' : '0');
+    } catch {}
+  }, [darkMode]);
 
   // Poll for updates every 5 seconds
   useEffect(() => {
@@ -392,19 +502,74 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className={`min-h-screen bg-gray-100 p-6 ${darkMode ? 'dashboard-dark' : ''}`}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Research Agent Dashboard
-          </h1>
-          <p className="text-gray-600">
-            Real-time monitoring of all research activities and income generation
-          </p>
-          <div className="mt-2 text-sm text-gray-500">
-            Last updated: {new Date(data.timestamp).toLocaleString()}
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+              Research Agent Dashboard
+            </h1>
+            <p className="text-gray-600">
+              Real-time monitoring of all research activities and income generation
+            </p>
+            <div className="mt-2 text-sm text-gray-500">
+              Last updated: {new Date(data.timestamp).toLocaleString()}
+            </div>
           </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setDarkMode(v => !v)}
+              className="px-4 py-2 bg-slate-700 text-white rounded hover:bg-slate-800 font-medium"
+            >
+              {darkMode ? '☀️ Light' : '🌙 Dark'}
+            </button>
+            <Link
+              href="/kdp"
+              className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 font-medium"
+            >
+              🎳 KDP Project
+            </Link>
+            <Link
+              href="/kaizen"
+              className="px-4 py-2 bg-violet-600 text-white rounded hover:bg-violet-700 font-medium"
+            >
+              🧭 Kaizen Bowling App
+            </Link>
+            <Link
+              href="/recovery"
+              className="px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700 font-medium"
+            >
+              🛟 Recovery
+            </Link>
+            <Link
+              href="/reports"
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium"
+            >
+              📄 View Reports
+            </Link>
+          </div>
+        </div>
+
+        {/* Mock Mode Warning */}
+        {data.systemInfo?.mockMode && (
+          <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded shadow">
+            <div className="flex items-center">
+              <span className="text-yellow-600 text-2xl mr-3">⚠️</span>
+              <div>
+                <h3 className="font-bold text-yellow-800">Mock Mode Active</h3>
+                <p className="text-sm text-yellow-700">
+                  Dashboard is using in-memory storage. Real-time updates will NOT persist across server restarts.
+                  For production, set the <code className="bg-yellow-100 px-1 rounded">REDIS_URL</code> environment variable.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Token Usage */}
+        <div className="mb-8">
+          <TokenUsageCard tokenUsage={data.tokenUsage} />
         </div>
 
         {/* Income Goal */}

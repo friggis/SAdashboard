@@ -35,7 +35,7 @@ export interface AgentInsight {
 export interface Agent {
   id: string;
   name: string;
-  type: 'amazon_fba' | 'tennis_betting' | 'challenge' | 'coordinator' | 'other';
+  type: 'amazon_fba' | 'tennis_betting' | 'challenge' | 'coordinator' | 'other' | 'maintainer';
   status: AgentStatus;
   description: string;
   currentTask?: AgentTask;
@@ -73,10 +73,29 @@ export interface IncomeGoal {
   }[];
 }
 
+export interface TaskTokenUsage {
+  title: string;
+  tokensUsed: number;
+  agentId: string;
+  timestamp: Date;
+}
+
+export interface TokenUsageSummary {
+  tokenLimit: number;
+  tokenUsed: number;
+  tokenUsedPercent: number;
+  bySource: {
+    main: number;
+    free: number;
+  };
+  lastTasks: (TaskTokenUsage & { source?: 'main' | 'free' })[];
+}
+
 export interface DashboardData {
   agents: Agent[];
   activityLogs: ActivityLog[];
   incomeGoal: IncomeGoal;
+  tokenUsage: TokenUsageSummary;
   systemMetrics: {
     totalAgents: number;
     runningAgents: number;
@@ -86,6 +105,10 @@ export interface DashboardData {
     lastUpdate: Date;
   };
   timestamp: Date;
+  systemInfo?: {
+    mockMode: boolean;
+    timestamp: string;
+  };
 }
 
 export interface AgentUpdatePayload {
@@ -95,6 +118,12 @@ export interface AgentUpdatePayload {
   newInsight?: Omit<AgentInsight, 'id' | 'timestamp'>;
   metrics?: Partial<AgentMetrics>;
   message?: string; // For activity logs
+  tokenUsage?: {
+    usedTokensDelta?: number;
+    taskTokensUsed?: number;
+    taskTitle?: string;
+    source?: 'main' | 'free';
+  };
 }
 
 // Helper to create default agent

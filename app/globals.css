@@ -19,3 +19,48 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Dashboard dark theme toggle */
+.dashboard-dark {
+  background: #0b1220 !important;
+}
+
+.dashboard-dark h1,
+.dashboard-dark h2,
+.dashboard-dark h3,
+.dashboard-dark p,
+.dashboard-dark span,
+.dashboard-dark li,
+.dashboard-dark div {
+  color: #dbe7ff;
+}
+
+.dashboard-dark .bg-white {
+  background-color: #111a2b !important;
+  border-color: #24324d !important;
+}
+
+.dashboard-dark .bg-gray-50,
+.dashboard-dark .bg-gray-100,
+.dashboard-dark .bg-blue-50,
+.dashboard-dark .bg-green-50,
+.dashboard-dark .bg-purple-50,
+.dashboard-dark .bg-red-50,
+.dashboard-dark .bg-emerald-50 {
+  background-color: #18253b !important;
+}
+
+.dashboard-dark .text-gray-900,
+.dashboard-dark .text-gray-800,
+.dashboard-dark .text-gray-700,
+.dashboard-dark .text-gray-600,
+.dashboard-dark .text-gray-500,
+.dashboard-dark .text-gray-400 {
+  color: #c7d6f7 !important;
+}
+
+.dashboard-dark .border-gray-200,
+.dashboard-dark .border-t,
+.dashboard-dark .border-b {
+  border-color: #2a3b5c !important;
+}
