@@ -52,14 +52,14 @@ const agents = [
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-gray-50 p-6 grid place-items-center">
-      <div className="w-full max-w-6xl space-y-8">
+    <main className="min-h-screen bg-gray-50 p-6 flex flex-col items-center justify-center">
+      <div className="w-full max-w-6xl space-y-8 flex flex-col items-center">
         <header className="text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Dashboard Navigation</h1>
           <p className="text-gray-600 mt-2">Quick access to each major area.</p>
         </header>
 
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 justify-items-center">
+        <section className="w-full grid grid-cols-2 md:grid-cols-3 gap-4">
           {navItems.map((item) => {
             const isDark = item.variant === 'dark';
 
@@ -67,7 +67,7 @@ export default function HomePage() {
               <Link
                 key={item.title}
                 href={item.href}
-                className={`w-full rounded-xl border p-5 transition hover:shadow-md ${
+                className={`w-full max-w-sm justify-self-center rounded-xl border p-5 transition hover:shadow-md ${
                   isDark
                     ? 'border-gray-900 bg-gray-900 text-white hover:bg-gray-800 hover:border-gray-800'
                     : 'border-gray-200 bg-white text-gray-900 hover:border-blue-300'
@@ -81,25 +81,25 @@ export default function HomePage() {
           })}
         </section>
 
-        <section className="bg-white rounded-xl border border-gray-200 p-5">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Agents Overview</h2>
+        <section className="w-full max-w-5xl mx-auto bg-white rounded-xl border border-gray-200 p-5">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">Agents Overview</h2>
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
+            <table className="min-w-full text-sm mx-auto">
               <thead>
-                <tr className="text-left border-b border-gray-200 text-gray-600">
-                  <th className="py-2 pr-4">Agent</th>
-                  <th className="py-2 pr-4">Role</th>
-                  <th className="py-2 pr-4">Model</th>
-                  <th className="py-2">Description</th>
+                <tr className="border-b border-gray-200 text-gray-600 text-center">
+                  <th className="py-2 px-2 md:pr-4">Agent</th>
+                  <th className="py-2 px-2 md:pr-4">Role</th>
+                  <th className="py-2 px-2 md:pr-4">Model</th>
+                  <th className="py-2 px-2">Description</th>
                 </tr>
               </thead>
               <tbody>
                 {agents.map((agent) => (
-                  <tr key={agent.name} className="border-b border-gray-100 align-top">
-                    <td className="py-3 pr-4 font-semibold text-gray-900">{agent.name}</td>
-                    <td className="py-3 pr-4 text-gray-700">{agent.role}</td>
-                    <td className="py-3 pr-4 text-gray-700">{agent.model}</td>
-                    <td className="py-3 text-gray-700">{agent.description}</td>
+                  <tr key={agent.name} className="border-b border-gray-100 align-top text-center">
+                    <td className="py-3 px-2 md:pr-4 font-semibold text-gray-900">{agent.name}</td>
+                    <td className="py-3 px-2 md:pr-4 text-gray-700">{agent.role}</td>
+                    <td className="py-3 px-2 md:pr-4 text-gray-700">{agent.model}</td>
+                    <td className="py-3 px-2 text-gray-700">{agent.description}</td>
                   </tr>
                 ))}
               </tbody>
