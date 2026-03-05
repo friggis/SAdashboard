@@ -24,6 +24,18 @@ export const researchReports: ResearchReport[] = [
     wordCount: 6500,
     status: 'published',
     author: 'Grant (Research Agent)'
+  },
+  {
+    id: 'uk-ai-grants-application-guide-2025',
+    title: 'UK AI Grants: Application Guide for Very Small Companies',
+    slug: 'uk-ai-grants-application-guide-2025',
+    description: 'A practical step-by-step guide for very small UK companies applying for AI grants, covering programme fit, scoring expectations, budgeting, and a 30-day submission plan.',
+    date: '2025-03-05',
+    category: 'Funding & Grants',
+    tags: ['AI', 'grants', 'UK', 'SME', 'application'],
+    wordCount: 1001,
+    status: 'published',
+    author: 'Grant (Research Agent)'
   }
 ];
 
