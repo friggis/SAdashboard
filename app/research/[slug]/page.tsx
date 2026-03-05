@@ -4,7 +4,7 @@ import { getResearchReportBySlug, getAllResearchReports } from '@/lib/research-r
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Link from 'next/link';
-import { format } from 'date-fns';
+// Date formatting handled with Intl.DateTimeFormat
 import fs from 'fs';
 import path from 'path';
 
@@ -66,7 +66,11 @@ export default async function ResearchReportPage({ params }: PageProps) {
               {report.category}
             </span>
             <span className="text-sm text-gray-500">
-              {format(new Date(report.date), 'MMMM d, yyyy')}
+              {new Intl.DateTimeFormat('en-GB', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              }).format(new Date(report.date))}
             </span>
           </div>
 

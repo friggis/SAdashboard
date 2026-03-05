@@ -1,9 +1,6 @@
-'use client';
-
 import React from 'react';
-import { researchReports, getAllResearchReports } from '@/lib/research-reports';
+import { getAllResearchReports } from '@/lib/research-reports';
 import Link from 'next/link';
-import { format } from 'date-fns';
 
 export default function ResearchPage() {
   const reports = getAllResearchReports();
@@ -35,7 +32,11 @@ export default function ResearchPage() {
                       {report.category}
                     </span>
                     <span className="text-sm text-gray-500">
-                      {format(new Date(report.date), 'MMMM d, yyyy')}
+                      {new Intl.DateTimeFormat('en-GB', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      }).format(new Date(report.date))}
                     </span>
                   </div>
 
@@ -102,12 +103,12 @@ export default function ResearchPage() {
             Our research agent can investigate any topic related to AI business opportunities,
             funding, or market analysis. Request a custom report through your dashboard.
           </p>
-          <button
-            onClick={() => alert('Feature coming soon! Use the dashboard agent to request research.')}
-            className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+          <Link
+            href="/reports"
+            className="inline-flex px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Request Research
-          </button>
+            Open Reports
+          </Link>
         </div>
       </div>
     </div>

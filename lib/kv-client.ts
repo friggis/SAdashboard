@@ -1,5 +1,5 @@
 import { Redis } from 'ioredis';
-import { Agent, ActivityLog, DashboardData, AgentUpdatePayload } from './types';
+import { Agent, ActivityLog, DashboardData, AgentUpdatePayload, IncomeGoal } from './types';
 
 type BreakdownKey = keyof IncomeGoal['breakdown'];
 

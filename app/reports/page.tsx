@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { getAllResearchReports } from '@/lib/research-reports';
 
 interface Report {
   agentId: string;
@@ -165,6 +166,8 @@ function ReportsContent() {
     ? reports.filter(r => r.agentId === agentFilter)
     : reports;
 
+  const publishedResearchReports = getAllResearchReports();
+
   const handleAgentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     if (value) {
@@ -237,6 +240,32 @@ function ReportsContent() {
         {!agentFilter ? (
           /* Grouped by agent view */
           <div className="space-y-6">
+            {publishedResearchReports.length > 0 && (
+              <div className="bg-white rounded-lg shadow p-4 border border-blue-100">
+                <div className="flex justify-between items-center mb-4 pb-2 border-b">
+                  <div>
+                    <h2 className="font-bold text-xl text-gray-900">Grant&apos;s Published Research</h2>
+                    <p className="text-sm text-gray-500">
+                      Canonical long-form reports from the research library
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {publishedResearchReports.map((report) => (
+                    <Link
+                      key={report.slug}
+                      href={`/research/${report.slug}`}
+                      className="p-4 rounded border border-blue-200 hover:border-blue-400 hover:bg-blue-50 transition-colors"
+                    >
+                      <div className="font-medium text-gray-900">{report.title}</div>
+                      <div className="text-xs text-gray-500 mt-1">{report.wordCount.toLocaleString()} words</div>
+                      <div className="text-blue-600 text-sm mt-2 font-medium">Open report →</div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {Object.entries(reportsByAgent).map(([agentId, { agentName, reports: agentReports }]) => (
               <div key={agentId} className="bg-white rounded-lg shadow p-4">
                 <div className="flex justify-between items-center mb-4 pb-2 border-b">
