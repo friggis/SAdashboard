@@ -173,10 +173,18 @@ const AgentCard: React.FC<{ agent: Agent }> = ({ agent }) => {
           stale running status auto-hidden
         </div>
       )}
-      <div className="mt-3 text-right border-t pt-3">
+      <div className="mt-3 text-right border-t pt-3 flex justify-end gap-3">
+        {agent.name === 'Kaizen Bowling App' && (
+          <Link
+            href="/marketing"
+            className="inline-flex items-center gap-1 px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 font-medium shadow-sm"
+          >
+            📢 Marketing
+          </Link>
+        )}
         <Link
           href={`/reports?agent=${encodeURIComponent(agent.id)}`}
-          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+          className="text-blue-600 hover:text-blue-800 text-sm font-medium self-center"
         >
           📄 View Report →
         </Link>
@@ -526,7 +534,7 @@ export default function Dashboard() {
               href="/kaizen"
               className="px-4 py-2 bg-violet-600 text-white rounded hover:bg-violet-700 font-medium"
             >
-              🧭 Kaizen Tracker
+              🧭 Kaizen Bowling App
             </Link>
             <Link
               href="/recovery"

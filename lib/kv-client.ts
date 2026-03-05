@@ -205,6 +205,14 @@ export class KVClient {
         changed = true;
       }
 
+      // Rename Kaizen Tracker to Kaizen Bowling App (marketing rebrand)
+      for (const agent of dashboard.agents) {
+        if (agent.name === 'Kaizen Tracker') {
+          agent.name = 'Kaizen Bowling App';
+          changed = true;
+        }
+      }
+
       // Keep system metrics aligned with latest agent state
       dashboard.systemMetrics.totalAgents = dashboard.agents.length;
       dashboard.systemMetrics.runningAgents = dashboard.agents.filter(a => a.status === 'running').length;
