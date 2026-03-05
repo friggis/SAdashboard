@@ -5,10 +5,11 @@ type NavItem = {
   href: string;
   icon: string;
   description: string;
+  variant?: 'default' | 'dark';
 };
 
 const navItems: NavItem[] = [
-  { title: 'Dashboard', href: '/', icon: '🏠', description: 'Main system dashboard' },
+  { title: 'Dashboard', href: '/', icon: '🏠', description: 'Main system dashboard', variant: 'dark' },
   { title: 'Agents', href: '/agents', icon: '🤖', description: 'Agent status and ownership' },
   { title: 'Marketing', href: '/marketing', icon: '📣', description: 'Kaizen Bowling marketing plan' },
   { title: 'Research Reports', href: '/reports', icon: '📄', description: 'All research outputs and reports' },
@@ -51,25 +52,33 @@ const agents = [
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto space-y-8">
-        <header>
+    <main className="min-h-screen bg-gray-50 p-6 grid place-items-center">
+      <div className="w-full max-w-6xl space-y-8">
+        <header className="text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Dashboard Navigation</h1>
           <p className="text-gray-600 mt-2">Quick access to each major area.</p>
         </header>
 
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {navItems.map((item) => (
-            <Link
-              key={item.title}
-              href={item.href}
-              className="rounded-xl border border-gray-200 bg-white p-5 hover:shadow-md hover:border-blue-300 transition"
-            >
-              <div className="text-3xl mb-2">{item.icon}</div>
-              <h2 className="text-lg font-semibold text-gray-900">{item.title}</h2>
-              <p className="text-sm text-gray-600 mt-1">{item.description}</p>
-            </Link>
-          ))}
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 justify-items-center">
+          {navItems.map((item) => {
+            const isDark = item.variant === 'dark';
+
+            return (
+              <Link
+                key={item.title}
+                href={item.href}
+                className={`w-full rounded-xl border p-5 transition hover:shadow-md ${
+                  isDark
+                    ? 'border-gray-900 bg-gray-900 text-white hover:bg-gray-800 hover:border-gray-800'
+                    : 'border-gray-200 bg-white text-gray-900 hover:border-blue-300'
+                }`}
+              >
+                <div className="text-3xl mb-2">{item.icon}</div>
+                <h2 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.title}</h2>
+                <p className={`text-sm mt-1 ${isDark ? 'text-gray-200' : 'text-gray-600'}`}>{item.description}</p>
+              </Link>
+            );
+          })}
         </section>
 
         <section className="bg-white rounded-xl border border-gray-200 p-5">
